@@ -1,0 +1,5 @@
+dependency_overrides:
+  fig_proto:
+    path: ../../fig_proto
+  fig_auth:
+    path: ../

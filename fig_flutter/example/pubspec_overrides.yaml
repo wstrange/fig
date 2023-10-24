@@ -1,0 +1,3 @@
+dependency_overrides:
+  fig_flutter:
+    path: ../

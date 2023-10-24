@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+
+option java_multiple_files = true;
+option java_package = "com.fig";
+option java_outer_classname = "Fig";
+option objc_class_prefix = "Fig";
+
+package fig;
+
+/// Authenticate to the server with an OIDC token. The token will be
+// validated, and if OK, a session will be created.
+message AuthenticateRequest {
+    string idToken = 1;
+    // additional authentication data
+    // provides more context for the server plugin.
+    // The client and server must sync on the format
+    string jsonAuthData = 2;
+}
+
+// Responses.
+message FigErrorResponse {
+    int32 code = 1; // Use http codes (200 = OK),
+    string message = 2;
+}
+
+message AuthenticateResponse {
+    string sessionToken = 1; // session token or cookie if you prefer
+    FigErrorResponse error = 2;
+    // additional data to enrich the auth session. This is distinct
+    // from authData in the AuthenticateRequest (although the plugin
+    // may choose to copy some of that incoming authData to this field)
+    string jsonAuthData = 3;
+}
+
+message LogoffRequest {
+
+}
+
+/// Service RPC calls for Firebase authentication
+
+service FigAuthService {
+    // The server will authenticate the provided OIDC token and create a session if it is OK
+    rpc authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+    // Terminates the session. The session cookie is provided as part of the grpc header
+    rpc logoff(LogoffRequest) returns (FigErrorResponse) {}
+}
+

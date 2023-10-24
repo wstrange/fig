@@ -1,0 +1,15 @@
+name: fig
+
+packages:
+  - fig_auth
+  - fig_flutter
+
+scripts:
+  a:
+    exec: dart analyze .
+
+  proto:
+    run: ./gen_protos.sh
+
+  build:
+    run: cd fig_auth && dart run build_runner build

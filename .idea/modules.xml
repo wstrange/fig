@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/fig_auth/melos_fig_auth.iml" filepath="$PROJECT_DIR$/fig_auth/melos_fig_auth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fig_flutter/melos_fig_flutter.iml" filepath="$PROJECT_DIR$/fig_flutter/melos_fig_flutter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fig_proto/melos_fig_proto.iml" filepath="$PROJECT_DIR$/fig_proto/melos_fig_proto.iml" />
+      <module fileurl="file://$PROJECT_DIR$/melos_fig.iml" filepath="$PROJECT_DIR$/melos_fig.iml" />
+    </modules>
+  </component>
+</project>

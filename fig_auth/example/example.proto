@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+//import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.fig";
+//option java_outer_classname = "AlpineProto";
+//option objc_class_prefix = "ALP";
+
+package fig_serv;
+
+message Hello {
+    string message = 1;
+}
+
+message HelloResponse {
+    string message = 2;
+}
+
+service Example {
+    rpc hello(Hello ) returns (HelloResponse) {};
+    rpc hello_no_auth(Hello) returns (HelloResponse) {};
+}

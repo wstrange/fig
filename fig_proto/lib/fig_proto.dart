@@ -1,0 +1,1 @@
+export 'src/generated/fig.pbgrpc.dart';

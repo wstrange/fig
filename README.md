@@ -1,11 +1,18 @@
+# Fig - Firebase Identity for Flutter using gRPC
+
+Fig provides two packages:
+
+* fig_auth - for Dart server code. Implements authentication for your gRPC services.
+* fig_flutter - client authentication to your gRPC dart server code
+
+Both packages delegate authentication to Firebase. This package provides a framework
+for integrating authenticatin into gRPC services. 
+
+Use this if:
+* You want to use gRPC for your Dart server code (instead of http/json)
+* You want your Flutter client to call your server code using gRPC
 
 
-## todo
+## Todo
 
-Server plugins - cumbersome. Should there be a default base class. 
-Cache Management - when should the cache be purged.
-Implement sign out.
-
-How to handle auth timeout. Return timeout to the client. Clients needs to handle...
-
-Makefile to generate stubs, copy, etc. Or see if melos can do this
+* Lots...

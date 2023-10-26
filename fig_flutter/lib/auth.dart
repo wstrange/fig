@@ -4,28 +4,26 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:grpc/grpc.dart';
 import 'client_interceptor.dart';
 
 import 'src/generated/fig.pbgrpc.dart';
 
-// Auth interceptor that will inject the session cookie into every grpc call
-final clientAuthInterceptor = ClientAuthInterceptor();
+/// Auth interceptor that will inject the session cookie into every grpc call
+/// TODO: Move to FicAuthClient impl
+final figAuthInterceptor = ClientAuthInterceptor();
 
-/// Attempts to Sign in with Firebase. If successful, a [User] is returned.
+/// Attempts to Sign in with Firebase. If successful, a Firebase [User] is returned.
 /// If the attempt is not a success, null is returned.
 Future<User?> signInWithFirebase({
   required List<AuthProvider> authProviders,
   required BuildContext context,
   required Future<String?> Function(Map<String, dynamic> authData) onSignIn,
   required Future Function() onSignOut,
-  required ClientChannel channel,
+  required FigAuthServiceClient authClient,
   Map<String, dynamic> additionalAuthInfo = const {},
   bool debug = false,
 }) async {
   var completer = Completer<User?>();
-
-  final authClient = FigAuthServiceClient(channel);
 
   _showToast(BuildContext context, String message) {
     if (context.mounted) {
@@ -56,15 +54,15 @@ Future<User?> signInWithFirebase({
 
                     try {
                       var idToken = await user.getIdToken();
-                      clientAuthInterceptor.authToken = idToken;
+                      figAuthInterceptor.authToken = idToken;
 
                       //print('Got auth token from firebase = $idToken');
                       var resp =
                           await authClient.authenticate(AuthenticateRequest(
-                        idToken: clientAuthInterceptor.authToken,
+                        idToken: figAuthInterceptor.authToken,
                         jsonAuthData: jsonEncode(additionalAuthInfo),
                       ));
-                      print('Server Authentication response = $resp');
+                      // print('Server Authentication response = $resp');
                       if (resp.error.code > 200) {
                         _showToast(
                             context, 'Could  not authenticate to server $resp');
@@ -72,7 +70,7 @@ Future<User?> signInWithFirebase({
                         return;
                       }
                       // This adds the auth token to every subsequent GRPC request
-                      clientAuthInterceptor.sessionToken = resp.sessionToken;
+                      figAuthInterceptor.sessionToken = resp.sessionToken;
 
                       // invoke callback to decode any additional info provided by the server
                       // as part of the auth context.
@@ -93,6 +91,7 @@ Future<User?> signInWithFirebase({
                     completer.complete(user);
                     return;
                   }),
+                  /// Todo: Not clear we need this...
                   SignedOutAction((context) async {
                     print('signed out action...');
                     await onSignOut();

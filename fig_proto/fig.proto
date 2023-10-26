@@ -25,24 +25,25 @@ message FigErrorResponse {
 }
 
 message AuthenticateResponse {
-    string sessionToken = 1; // session token or cookie if you prefer
+    string sessionToken = 1; // session token that should be used in subquent client gRPC calls
     FigErrorResponse error = 2;
-    // additional data to enrich the auth session. This is distinct
-    // from authData in the AuthenticateRequest (although the plugin
-    // may choose to copy some of that incoming authData to this field)
+    // additional data to enrich the auth session. This is data
+    // the *CLIENT* provides to the server to inform the auth decision (for example,
+    // a member id).
+    // This is different than the
+    // authData in the AuthenticateReques, which is data the *SERVER* provides to the client
+    // For example, membership level.
     string jsonAuthData = 3;
 }
 
 message LogoffRequest {
-
 }
 
 /// Service RPC calls for Firebase authentication
 
 service FigAuthService {
-    // The server will authenticate the provided OIDC token and create a session if it is OK
+    // The server will authenticate with the provided OIDC token and create a session if it is OK
     rpc authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
     // Terminates the session. The session cookie is provided as part of the grpc header
     rpc logoff(LogoffRequest) returns (FigErrorResponse) {}
 }
-

@@ -17,18 +17,21 @@ class MySessionPlugins extends DefaultSessionPlugin {
 
 final sessionManager = SessionManager(sessionPlugin: MySessionPlugins());
 
-
-/// An example of extending the Context with additional app specific
-/// info.
+/// This is our application specific context.
+/// It extends the standard context (containing OIDC claims) with
+/// application specific data.
+///
+/// For example, you can lookup the user in the database
+/// This context is available on server calls.
 class AppContext extends Context {
-  String? enhanceHelloMessage; // some extra context
+  String? extraGreeting; // some extra context
 
-  AppContext(super.session, this.enhanceHelloMessage) {
+  AppContext(super.session, {required this.extraGreeting}) {
     print('Create Context');
   }
 
   String toString() =>
-      'AppContext claims: ${session.claims} enhanced data" $enhanceHelloMessage';
+      'AppContext claims: ${session.claims} enhanced data" $extraGreeting';
 }
 
 // Context provided to authenticated grpc calls.
@@ -39,6 +42,6 @@ final contextMgr = ContextManager(
     // by your grpc methods.
     // return a Context (or subclass)
     onContextCreate: (session) async {
-      return AppContext(session, 'Additional Session Data');
+      return AppContext(session, extraGreeting: '(and a good day to you!');
     });
 

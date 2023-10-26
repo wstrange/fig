@@ -10,7 +10,7 @@ for integrating authenticatin into gRPC services.
 
 Use this if:
 * You want to use gRPC for your Dart server code (instead of http/json)
-* You want your Flutter client to call your server code using gRPC
+* You want your Flutter client to call your Dart service using gRPC
 
 
 ## Todo

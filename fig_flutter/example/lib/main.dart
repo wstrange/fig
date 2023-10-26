@@ -1,4 +1,5 @@
 import 'package:fig_flutter/fig_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,27 +8,36 @@ import 'package:grpc/grpc.dart';
 import 'firebase_options.dart';
 import 'src/generated/example.pbgrpc.dart';
 
+
+/// For Firebase Google Auth, you need your google client id.
+/// Replace this with the value from your Firebase console.
 const googleClientId =
     '465372895035-r5o2hedarih4l5u8297p1b3d7vmk5prs.apps.googleusercontent.com';
 
+/// List of Firebase auth providers. Modify per your Firebase setup
 var providers = <AuthProvider>[
   EmailAuthProvider(),
   GoogleProvider(clientId: googleClientId),
 ];
 
-// final hostName = 'Warrens-MacBook-Air.local';
+
+/// Replace this with the hostname of your gRPC server
 const hostName = 'warrens-air.lan';
-// final hostName = '192.168.86.28';
+
 final channel = ClientChannel(hostName,
     port: 50051,
     options: const ChannelOptions(
         connectTimeout: Duration(seconds: 20),
         credentials: ChannelCredentials.insecure()));
 
-final client = ExampleClient(channel, interceptors: [clientAuthInterceptor]);
-// grpc client for authentication to our server. Part of the grpc_auth package
-final authClient =
-    FigAuthServiceClient(channel, interceptors: [clientAuthInterceptor]);
+/// THe auth client to handle authentication calls. [figAuthInterceptor] is
+/// also required here.
+final figClient = FigClient(channel: channel );
+
+/// Initialize our gRPC client. You MUST include the interceptor
+final client = ExampleClient(channel, interceptors: [figClient.interceptor]);
+// grpc client for authentication to our server. Part of the fig_auth package
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,41 +58,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Fig gRPC demo'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -90,107 +75,108 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() async {
-    var resp = await client.hello_no_auth(Hello(message: 'Hello'));
-
-    print('resp = ${resp.message}');
-
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  String lastHelloMessage = '[none]';
+  bool signedIn = false;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
+
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
             Text(
-              '$_counter',
+              lastHelloMessage,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
+            SizedBox(height: 20,),
             Row(
               children: [
                 ElevatedButton(
                     onPressed: () async {
-                      var r =
-                          await client.hello_no_auth(Hello(message: 'No Auth'));
-                      print('response = ${r.message}');
+                      try {
+                        var r =
+                            await client.hello_no_auth(Hello(message: 'No Auth'));
+                        print('response = ${r.message}');
+                        setState(() {
+                          lastHelloMessage = r.message;
+                        });
+                      } on Exception catch (e) {
+                        /// Error!!
+                        setState(() {
+                          lastHelloMessage = 'Error: $e ';
+                        });
+                      }
                     },
-                    child: Text('No Auth Call')),
+                    child: Text('Hello - no Auth')),
                 ElevatedButton(
                     onPressed: () async {
-                      var r = await client.hello(Hello(message: 'No Auth'));
-                      print('response = ${r.message}');
+                      try {
+                        var r = await client.hello(Hello(message: 'Auth Me!'));
+                        setState(() {
+                          lastHelloMessage = r.message;
+                        });
+                      } on Exception catch (e) {
+                       setState(() {
+                         lastHelloMessage = 'Error: $e';
+                       });
+                      }
                     },
-                    child: Text('Auth Call')),
+                    child: Text('Hello - Auth')),
               ],
             ),
             SizedBox(
               height: 30,
             ),
-            ElevatedButton(
-                onPressed: () async {
-                  var user = await signInWithFirebase(
-                      authProviders: providers,
-                      context: context,
-                      onSignIn: (token) async {
-                        return 'fo';
-                      },
-                      onSignOut: () async {},
-                      channel: channel);
-                },
-                child: Text('Sign on with firebase'))
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                    onPressed: signedIn ? null: () async {
+                      // todo:
+                      // why not have this return a record
+                      // (user,extraata)
+
+                      var user = await figClient.signInWithFirebase(
+                          authProviders: providers,
+                          context: context,
+                          // Callback provides additional json data
+                          // that the server may elect to send us.
+                          onSignIn: (Map<String,dynamic> serverData) async {
+                            print('Auth data returned by server: $serverData');
+                            setState(() {
+                              signedIn = true;
+                              lastHelloMessage = 'Signed in!';
+                            });
+                            return null;
+                          },
+                          onSignOut: () async {
+                            print('Special on sign out called');
+                          },
+                         );
+                      // You might want to grap the firebase user data here for your app
+                      print('Firebase user = $user');
+                    },
+
+                    child: Text('Sign on with firebase')),
+                ElevatedButton(onPressed: signedIn ? () async {
+                  await figClient.signOut();
+                  setState(() {
+                    signedIn = false;
+                    lastHelloMessage = 'Signed out';
+                  });
+
+                } : null, child: Text('Sign Out')),
+              ],
+            )
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

@@ -44,41 +44,38 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDefvHfdcal2ns3wtrxaBCvPyNM5HVEE50',
-    appId: '1:465372895035:web:8e196854177b3fb4ab891e',
-    messagingSenderId: '465372895035',
-    projectId: 'aclub-67a12',
-    authDomain: 'aclub-67a12.firebaseapp.com',
-    storageBucket: 'aclub-67a12.appspot.com',
+    apiKey: 'AIzaSyAniF2swtIkxCkIdJvnv3ih24DjcmfcPjM',
+    appId: '1:932931691792:web:e6851570401988df7df195',
+    messagingSenderId: '932931691792',
+    projectId: 'figexample',
+    authDomain: 'figexample.firebaseapp.com',
+    storageBucket: 'figexample.appspot.com',
+    measurementId: 'G-NVEG09QZDM',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDGE6TL83miL9Q-8dHrFi6EClK3oz9V3ug',
-    appId: '1:465372895035:android:5df5371ab0c94daeab891e',
-    messagingSenderId: '465372895035',
-    projectId: 'aclub-67a12',
-    storageBucket: 'aclub-67a12.appspot.com',
+    apiKey: 'AIzaSyAaU5aaOPCJ29BexLmWUQLEDX4Lm6-hKkA',
+    appId: '1:932931691792:android:cd0581e1b0de0a387df195',
+    messagingSenderId: '932931691792',
+    projectId: 'figexample',
+    storageBucket: 'figexample.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCGDGg1jbyvDKpW0fr5GWgm2DFZscE_S0o',
-    appId: '1:465372895035:ios:87c706a58585d5d6ab891e',
-    messagingSenderId: '465372895035',
-    projectId: 'aclub-67a12',
-    storageBucket: 'aclub-67a12.appspot.com',
-    androidClientId: '465372895035-3a1u99801t7q18n11ob2ohjss0ma1n1k.apps.googleusercontent.com',
-    iosClientId: '465372895035-fspu9s0nlsebf111nbmkn3v3ngnl8qe7.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBcMvEcCmiXFVTysnojo8hlQPjjp8Y0d-8',
+    appId: '1:932931691792:ios:aca00b47f61515c87df195',
+    messagingSenderId: '932931691792',
+    projectId: 'figexample',
+    storageBucket: 'figexample.appspot.com',
     iosBundleId: 'com.example.example',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCGDGg1jbyvDKpW0fr5GWgm2DFZscE_S0o',
-    appId: '1:465372895035:ios:93fe8575768fd460ab891e',
-    messagingSenderId: '465372895035',
-    projectId: 'aclub-67a12',
-    storageBucket: 'aclub-67a12.appspot.com',
-    androidClientId: '465372895035-3a1u99801t7q18n11ob2ohjss0ma1n1k.apps.googleusercontent.com',
-    iosClientId: '465372895035-e8qimd20cujov1rls9l1n3e7hkrd3bcl.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBcMvEcCmiXFVTysnojo8hlQPjjp8Y0d-8',
+    appId: '1:932931691792:ios:62d5393db50447a17df195',
+    messagingSenderId: '932931691792',
+    projectId: 'figexample',
+    storageBucket: 'figexample.appspot.com',
     iosBundleId: 'com.example.example.RunnerTests',
   );
 }

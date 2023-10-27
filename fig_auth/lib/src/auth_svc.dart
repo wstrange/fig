@@ -62,7 +62,9 @@ class AuthService extends FigAuthServiceBase {
     }
   }
 
-  // Removes the session, destroys the session cookie
+  /// Removes the session, destroys the session cookie
+  /// Note this is an authenticated call. We expect the session cookie
+  /// to be sent
   @override
   Future<FigErrorResponse> logoff(
       ServiceCall call, LogoffRequest request) async {
@@ -70,6 +72,8 @@ class AuthService extends FigAuthServiceBase {
       var session = await getSession(call);
       _sessionManager.deleteSession(session!);
     } catch (e) {
+      // in theory this can't happen.... the auth filter should catch this before
+      _log.severe('Error finding session when logging off: $e');
       return FigErrorResponse(code: 403, message: e.toString());
     }
 

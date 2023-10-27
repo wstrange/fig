@@ -1,5 +1,4 @@
 import 'package:fig_flutter/fig_flutter.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -7,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:grpc/grpc.dart';
 import 'firebase_options.dart';
 import 'src/generated/example.pbgrpc.dart';
-
 
 /// For Firebase Google Auth, you need your google client id.
 /// Replace this with the value from your Firebase console.
@@ -20,7 +18,6 @@ var providers = <AuthProvider>[
   GoogleProvider(clientId: googleClientId),
 ];
 
-
 /// Replace this with the hostname of your gRPC server
 const hostName = 'warrens-air.lan';
 
@@ -30,14 +27,11 @@ final channel = ClientChannel(hostName,
         connectTimeout: Duration(seconds: 20),
         credentials: ChannelCredentials.insecure()));
 
-/// THe auth client to handle authentication calls. [figAuthInterceptor] is
-/// also required here.
-final figClient = FigClient(channel: channel );
+/// THe auth client to handle our gRPC authentication calls.
+final figClient = FigClient(channel: channel);
 
-/// Initialize our gRPC client. You MUST include the interceptor
+/// Initialize our gRPC client. You MUST include the fig interceptor
 final client = ExampleClient(channel, interceptors: [figClient.interceptor]);
-// grpc client for authentication to our server. Part of the fig_auth package
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,14 +69,13 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String lastHelloMessage = '[none]';
+  String serverMessage = '[none]';
   bool signedIn = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
@@ -91,25 +84,28 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              lastHelloMessage,
+              serverMessage,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            SizedBox(height: 20,),
+            SizedBox(
+              height: 20,
+            ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
                     onPressed: () async {
                       try {
-                        var r =
-                            await client.hello_no_auth(Hello(message: 'No Auth'));
+                        var r = await client
+                            .hello_no_auth(Hello(message: 'No Auth'));
                         print('response = ${r.message}');
                         setState(() {
-                          lastHelloMessage = r.message;
+                          serverMessage = r.message;
                         });
                       } on Exception catch (e) {
                         /// Error!!
                         setState(() {
-                          lastHelloMessage = 'Error: $e ';
+                          serverMessage = 'Error: $e ';
                         });
                       }
                     },
@@ -119,12 +115,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       try {
                         var r = await client.hello(Hello(message: 'Auth Me!'));
                         setState(() {
-                          lastHelloMessage = r.message;
+                          serverMessage = r.message;
                         });
                       } on Exception catch (e) {
-                       setState(() {
-                         lastHelloMessage = 'Error: $e';
-                       });
+                        setState(() {
+                          serverMessage = 'Error: $e';
+                        });
                       }
                     },
                     child: Text('Hello - Auth')),
@@ -137,41 +133,45 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
-                    onPressed: signedIn ? null: () async {
-                      // todo:
-                      // why not have this return a record
-                      // (user,extraata)
-
-                      var user = await figClient.signInWithFirebase(
-                          authProviders: providers,
-                          context: context,
-                          // Callback provides additional json data
-                          // that the server may elect to send us.
-                          onSignIn: (Map<String,dynamic> serverData) async {
-                            print('Auth data returned by server: $serverData');
+                    onPressed: signedIn
+                        ? null
+                        : () async {
+                            // this will naviagate to the fluter fire UI for
+                            // authentication. If successful, the gRPC server
+                            // will be called to authenticate. Your server
+                            // can return extra data (this is a Map)
+                            // for example, loyalty number, etc.
+                            var (user, extraData) =
+                                await figClient.signInWithFirebase(
+                              authProviders: providers,
+                              additionalAuthInfo: {'clubNumber' : '1234'},
+                              context: context,
+                            );
+                            // You might want to grab the firebase user data here for your app
+                            print(
+                                'Firebase user = $user, extra data = $extraData)');
                             setState(() {
                               signedIn = true;
-                              lastHelloMessage = 'Signed in!';
+                              serverMessage =
+                                  'Signed in! extra server info: $extraData';
                             });
-                            return null;
                           },
-                          onSignOut: () async {
-                            print('Special on sign out called');
-                          },
-                         );
-                      // You might want to grap the firebase user data here for your app
-                      print('Firebase user = $user');
-                    },
-
-                    child: Text('Sign on with firebase')),
-                ElevatedButton(onPressed: signedIn ? () async {
-                  await figClient.signOut();
-                  setState(() {
-                    signedIn = false;
-                    lastHelloMessage = 'Signed out';
-                  });
-
-                } : null, child: Text('Sign Out')),
+                    child: Text('Sign in')),
+                ElevatedButton(
+                    onPressed: signedIn
+                        ? () async {
+                            try {
+                              await figClient.signOut(context);
+                            } on Exception catch (e) {
+                              print('Exception signing out: $e');
+                            }
+                            setState(() {
+                              signedIn = false;
+                              serverMessage = 'Signed out';
+                            });
+                          }
+                        : null,
+                    child: Text('Sign Out')),
               ],
             )
           ],

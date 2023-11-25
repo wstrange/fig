@@ -19,7 +19,7 @@ var providers = <AuthProvider>[
 ];
 
 /// Replace this with the hostname of your gRPC server
-const hostName = 'warrens-air.lan';
+const hostName = 'localhost';
 
 final channel = ClientChannel(hostName,
     port: 50051,

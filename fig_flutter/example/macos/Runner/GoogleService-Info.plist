@@ -3,23 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>465372895035-e8qimd20cujov1rls9l1n3e7hkrd3bcl.apps.googleusercontent.com</string>
+	<string>932931691792-k8co3sdl71i3l1tmdj7u67c2rgj41s91.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.465372895035-e8qimd20cujov1rls9l1n3e7hkrd3bcl</string>
+	<string>com.googleusercontent.apps.932931691792-k8co3sdl71i3l1tmdj7u67c2rgj41s91</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>465372895035-3a1u99801t7q18n11ob2ohjss0ma1n1k.apps.googleusercontent.com</string>
+	<string>932931691792-mqaqgg1qjugqh6m7m2ah9cgt31kug4n2.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCGDGg1jbyvDKpW0fr5GWgm2DFZscE_S0o</string>
+	<string>AIzaSyBcMvEcCmiXFVTysnojo8hlQPjjp8Y0d-8</string>
 	<key>GCM_SENDER_ID</key>
-	<string>465372895035</string>
+	<string>932931691792</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.example.example.RunnerTests</string>
 	<key>PROJECT_ID</key>
-	<string>aclub-67a12</string>
+	<string>figexample</string>
 	<key>STORAGE_BUCKET</key>
-	<string>aclub-67a12.appspot.com</string>
+	<string>figexample.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:465372895035:ios:93fe8575768fd460ab891e</string>
+	<string>1:932931691792:ios:62d5393db50447a17df195</string>
 </dict>
 </plist>

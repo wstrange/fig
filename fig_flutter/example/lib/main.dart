@@ -3,7 +3,11 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:grpc/grpc.dart';
+
+// For mobile use this
+// import 'package:grpc/grpc.dart';
+// For web, use this:
+import 'package:grpc/grpc_web.dart';
 import 'firebase_options.dart';
 import 'src/generated/example.pbgrpc.dart';
 
@@ -21,11 +25,14 @@ var providers = <AuthProvider>[
 /// Replace this with the hostname of your gRPC server
 const hostName = 'localhost';
 
-final channel = ClientChannel(hostName,
-    port: 50051,
-    options: const ChannelOptions(
-        connectTimeout: Duration(seconds: 20),
-        credentials: ChannelCredentials.insecure()));
+/// For flutter mobile, use this:
+// final channel = ClientChannel(hostName,
+//     port: 50051,
+//     options: const ChannelOptions(
+//         connectTimeout: Duration(seconds: 20),
+//         credentials: ChannelCredentials.insecure()));
+
+final channel = GrpcWebClientChannel.xhr(Uri.parse('http://${hostName}:9080'));
 
 /// THe auth client to handle our gRPC authentication calls.
 final figClient = FigClient(channel: channel);

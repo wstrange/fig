@@ -7,6 +7,8 @@ import 'package:fig_serv_example/fig_serv_example.dart';
 // Replace this with your firebase project ID
 final firebaseId = 'figexample';
 
+final port = 50051;
+
 var logger = Logger('fig_auth_example');
 
 void main(List<String> arguments) async {
@@ -31,9 +33,13 @@ void main(List<String> arguments) async {
     services: [authSvc, svc],
     // you MUST include the authInterceptor
     interceptors: [loggingInterceptor, authSvc.authInterceptor],
-    codecRegistry: CodecRegistry(codecs: const [GzipCodec(), IdentityCodec()]),
+    codecRegistry: CodecRegistry(codecs: const [GzipCodec(),
+      // To support grpc web, remove IdentityCode()
+      // Per https://github.com/grpc/grpc-dart/issues/506#issuecomment-882058839
+      // IdentityCodec()
+    ]),
   );
 
-  logger.info('Starting Example Grpc Service');
-  await server.serve(port: 50051,);
+  logger.info('Starting Example Grpc Service on $port');
+  await server.serve(port: port,);
 }

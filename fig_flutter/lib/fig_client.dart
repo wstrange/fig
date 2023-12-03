@@ -6,14 +6,16 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'src/generated/fig.pbgrpc.dart';
-import 'package:grpc/grpc.dart';
+// import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_web.dart';
 import 'client_interceptor.dart';
 
 typedef JsonMap = Map<String, dynamic>;
 const JsonMap _emptyMap = {};
 
 class FigClient {
-  final ClientChannel channel;
+  // final ClientChannel channel;
+  final GrpcWebClientChannel channel;
   late FigAuthServiceClient _authClient;
 
   final interceptor = ClientAuthInterceptor();

@@ -86,25 +86,23 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
+      body: Container(
+        padding: EdgeInsets.all(10.0),
+        alignment: Alignment.center,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Text(
-              serverMessage,
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
             SizedBox(
               height: 20,
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ElevatedButton(
                     onPressed: () async {
                       try {
                         var r = await client
-                            .hello_no_auth(Hello(message: 'No Auth'));
+                            .hello_no_auth(Hello(message: 'Hello from unauthenticated Fig client'));
                         print('response = ${r.message}');
                         setState(() {
                           serverMessage = r.message;
@@ -116,11 +114,12 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       }
                     },
-                    child: Text('Hello - no Auth')),
+                    child: Text('Say Hello: No Authentication required')),
+                SizedBox(width: 20,),
                 ElevatedButton(
                     onPressed: () async {
                       try {
-                        var r = await client.hello(Hello(message: 'Auth Me!'));
+                        var r = await client.hello(Hello(message: 'I am an authenticated person!'));
                         setState(() {
                           serverMessage = r.message;
                         });
@@ -130,41 +129,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       }
                     },
-                    child: Text('Hello - Auth')),
+                    child: Text('Say Hello - Auth required')),
               ],
             ),
             SizedBox(
               height: 30,
             ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton(
-                    onPressed: signedIn
-                        ? null
-                        : () async {
-                            // this will naviagate to the fluter fire UI for
-                            // authentication. If successful, the gRPC server
-                            // will be called to authenticate. Your server
-                            // can return extra data (this is a Map)
-                            // for example, loyalty number, etc.
-                            var (user, extraData) =
-                                await figClient.signInWithFirebase(
-                              authProviders: providers,
-                              additionalAuthInfo: {'clubNumber' : '1234'},
-                              context: context,
-                            );
-                            // You might want to grab the firebase user data here for your app
-                            print(
-                                'Firebase user = $user, extra data = $extraData)');
-                            setState(() {
-                              signedIn = true;
-                              serverMessage =
-                                  'Signed in! extra server info: $extraData';
-                            });
-                          },
-                    child: Text('Sign in')),
-                ElevatedButton(
+                    // If signed in, show sign out button
                     onPressed: signedIn
                         ? () async {
                             try {
@@ -177,10 +151,52 @@ class _MyHomePageState extends State<MyHomePage> {
                               serverMessage = 'Signed out';
                             });
                           }
-                        : null,
-                    child: Text('Sign Out')),
+                        //else show sign in
+                        : () async {
+                            // this will naviagate to the fluter fire UI for
+                            // authentication. If successful, the gRPC server
+                            // will be called to authenticate. Your server
+                            // can return extra data (this is a Map)
+                            // for example, loyalty number, etc.
+                            var (user, extraData) =
+                                await figClient.signInWithFirebase(
+                              authProviders: providers,
+                              additionalAuthInfo: {'clubNumber': '1234'},
+                              context: context,
+                            );
+                            // You might want to grab the firebase user data here for your app
+                            print(
+                                'Firebase user = $user, extra data = $extraData)');
+                            setState(() {
+                              signedIn = true;
+                              serverMessage =
+                                  'Signed in. \nextra auth data that the server returned to us:\n $extraData';
+                            });
+                          },
+                    child: signedIn ? Text('Sign Out') : Text('Sign in')),
               ],
-            )
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text('Last grpc message received from server:'),
+                      SizedBox(height: 20),
+                      SelectableText(
+                        serverMessage,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

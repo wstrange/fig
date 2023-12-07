@@ -20,20 +20,22 @@ class MySvc extends ExampleServiceBase {
 
   @override
   Future<HelloResponse> hello(ServiceCall call, Hello request) async {
-    logger.info('Hello request = ${request.message}');
     // get the application context...
     var ctx = await getContext(call);
+    var e = ctx.session.claims.email;
+
+    logger.info('Hello request message= ${request.message} from=$e  extra context = ${ctx.extraGreeting}');
 
     return HelloResponse(
         message:
-            'hello: ${request.message}\n Extra context=${ctx.extraGreeting}');
+            'hello authenticated person $e. \nI got your message "${request.message}"');
   }
 
   /// Example that we will put on the no_authenticated list
   @override
   Future<HelloResponse> hello_no_auth(ServiceCall call, Hello request) async {
     // dont call getContext() on unauthenticated calls
-    print('Hello no auth = ${request.message}');
-    return HelloResponse(message: 'no auth is ok');
+    logger.info('Hello no auth = ${request.message}');
+    return HelloResponse(message: 'no auth server method got your message:\n "${request.message}"');
   }
 }

@@ -37,11 +37,11 @@ class AppContext extends Context {
 // Context provided to authenticated grpc calls.
 final contextMgr = ContextManager(
     sessionManager: sessionManager,
-    // Called with a context is created. THis is where you can
+    // Called when a context is created. THis is where you can
     // enhance the context with application specific info needed
     // by your grpc methods.
     // return a Context (or subclass)
     onContextCreate: (session) async {
-      return AppContext(session, extraGreeting: '(and a good day to you!');
+      return AppContext(session, extraGreeting: 'and a good day to you!');
     });
 

@@ -33,11 +33,9 @@ to the client in the response.
 ## Running the example
 
 An example [service](fig_auth/example/bin/run.dart) and [Flutter client](fig_flutter/example/lib/main.dart) are 
-provided as an example.
+provided.
 
-The easiest way to demo this is to use the provided envoy gRPC proxy and launch a Flutter web app.
-
-To run the proxy and start the example service:
+The easiest way to demo this is to use the provided [script](fig_auth/example/run.sh) to launch the gRPC service and the envoy gRPC proxy:
 
 ```bash
 cd fig_auth/example
@@ -46,24 +44,83 @@ cd fig_auth/example
 
 Once the server has started, launch the Flutter client in Chrome (from your IDE: run flutter_fig/example/lib/main.dart).
 
+You can login using `demo@test.com` with `Passw0rd`, or use Google Sign in.
+
 ---
 **NOTE**
 
-If you are not familiar with gRPC, the use of envoy may be puzzling. gRPC uses http/2 which is
+gRPC uses http/2 which is
 not natively supported by web browsers.  In order to use gRPC in a web app, you need to use
 a flavour of gRPC (grpc-web) that can be sent over http/1.  The Envoy proxy
-converts the gRPC web traffic over http/1 to "native" gRPC over http/2.
+converts this http/1 gRPC web traffic "native" gRPC over http/2.
 
 ---
 
 
-
-## fig_auth
+## fig_auth notes
 
 fig_auth is the server framework used to integrate gRPC authentication with the rest of your 
 gRPC services. The basic idea is that you "mixin" these gRPC calls with the rest of your services.
 
 It consists of:
 
-* Generated gRPC/protobuf methods to handle client authenticaition calls. 
-* 
+* Generated gRPC/protobuf methods to handle client authentication calls. 
+* A service interceptor that will check for a valid session before forwarding the call to your
+ services.
+
+The AuthService is initialized like this:
+
+```dart
+// AuthService is the required Fig Authentication service.
+  final authSvc = AuthService(
+      firebaseProjectId: firebaseId,
+      sessionManager: sessionManager,
+      // A list of grpc methods that will NOT be authenticated.
+      unauthenticatedMethodNames: ['hello_no_auth',]);
+```
+
+
+Provide your firebase project id, and a list of gRPC method names that you do not want to enforce
+authentication on (all other methods will be intercepted).
+
+To create the Server:
+
+```dart
+ final server = Server.create(
+    services: [authSvc, svc],
+    // you MUST include the authInterceptor
+    interceptors: [loggingInterceptor, authSvc.authInterceptor],
+    codecRegistry: CodecRegistry(codecs: const [GzipCodec(),
+      // To support grpc web, remove IdentityCode()
+      // Per https://github.com/grpc/grpc-dart/issues/506#issuecomment-882058839
+      // IdentityCodec()
+    ]),
+
+```
+`svc` above is a handle to your own custom gRPC services.  The `authSvc.authInterceptor` is required
+as it enforces service authenication. 
+
+See [run.dart](fig_auth/example/bin/run.dart) for a complete example.
+
+
+### Session Manager
+
+`fig_auth` provides a primitive session management service. Sessions by default are stored in 
+a in-memory hashmap keyed by the session id. The `SessionManager` interface supports
+plugins to persist or retrieve sessions to alternate storage schemes (SQL, for example).
+You can write your own plugin for your particular use case.
+
+See [SessionPlugin](fig_auth/lib/src/session_plugin.dart).
+
+
+## fig_flutter
+
+This is the Flutter client package that integrates with the `fig_auth` service.
+
+fig_flutter delegates authentication to Firebase using the FlutterFire UI. On succesfull 
+authentication, the OIDC token obtained from Firebase will be sent to the `fig_auth` service
+for validation. A session will be created, and the session cookie sent back to the client.
+
+A provided gRPC client interceptor will inject the session token into the `Authorization` header
+in subsequent calls to your gRPC services. 
+

@@ -37,13 +37,13 @@ class FigClient {
 
   /// Attempts to Sign in with Firebase. If successful, a Firebase [User] is returned.
   /// If the attempt is not a success, null is returned.
-  Future<(User?, Map<String, dynamic>)> signInWithFirebase({
+  Future<User> signInWithFirebase({
     required List<AuthProvider> authProviders,
     required BuildContext context,
-    Map<String, dynamic> additionalAuthInfo = const {},
+    Map<String, String> additionalAuthInfo = const {},
     bool debug = false,
   }) async {
-    var completer = Completer<(User?, JsonMap)>();
+    var completer = Completer<User>();
 
     unawaited(
       Navigator.of(context).push(
@@ -56,7 +56,7 @@ class FigClient {
                   actions: [
                     AuthStateChangeAction<SignedIn>((context, state) async {
                       if (state.user == null) {
-                        completer.complete((null, _emptyMap));
+                        completer.complete(null);
                         return;
                       }
                       var user = state.user!;
@@ -69,27 +69,24 @@ class FigClient {
                         var resp =
                             await _authClient.authenticate(AuthenticateRequest(
                           idToken: figAuthInterceptor.authToken,
-                          jsonAuthData: jsonEncode(additionalAuthInfo),
+                          additionalAuthData:additionalAuthInfo,
                         ));
                         // print('Server Authentication response = $resp');
                         if (resp.error.code > 200) {
                           _showToast(
                               context, 'Error authenticating to server $resp');
-                          completer.complete((null, _emptyMap));
+                          completer.complete(null);
                           return;
                         }
                         // This adds the auth token to every subsequent GRPC request
                         interceptor.sessionToken = resp.sessionToken;
 
-                        var data = jsonDecode(resp.jsonAuthData);
-                        if (data is Map) {
-                          completer.complete((user, data as JsonMap));
-                        } else {
-                          completer.complete((user, _emptyMap));
-                        }
+                        completer.complete(user);
+
+
                       } catch (e) {
                         _showToast(context, e.toString());
-                        completer.complete((null, _emptyMap));
+                        completer.complete(null);
                       }
                       return;
                     }),

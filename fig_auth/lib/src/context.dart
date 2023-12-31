@@ -13,6 +13,8 @@ class Context {
   /// The associated session
   final Session session;
   Context(this.session);
+
+  bool get isAuthenticated => true;
 }
 
 /// Extend this...?

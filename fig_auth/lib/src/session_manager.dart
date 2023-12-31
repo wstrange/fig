@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
+import 'db.dart';
 import 'session_plugin.dart';
 import 'package:logging/logging.dart';
 import 'package:openid_client/openid_client.dart';
@@ -30,13 +32,21 @@ class SessionManager {
   // map of cookies to sessions for cached lookup.
   final Map<String, Session> _sessionCache = {};
   final Duration sessionCachePurgeDuration;
+  late Database db;
+
+  static final cookieSize = 16;
 
   SessionManager(
       {SessionPlugin? sessionPlugin,
-      this.sessionCachePurgeDuration = const Duration(days: 1)}) {
+      this.sessionCachePurgeDuration = const Duration(days: 1),
+      required File databaseFile}) {
     // If no sessions plugins are provided, use a default one
     plugin = sessionPlugin ?? DefaultSessionPlugin();
     Timer.periodic(Duration(seconds: 30), _maintainSessionCache);
+
+    db = Database(databaseFile: databaseFile);
+
+
   }
 
   void _maintainSessionCache(Timer t) async {
@@ -72,26 +82,24 @@ class SessionManager {
   // or a [Session].
   Future<(FigErrorResponse?, Session?)> createSession({
     required OpenIdClaims claims,
-    // extra data passed to the plugin to make a decision on if a session
-    // should be created.
-    required Map<String, dynamic> authData,
   }) async {
     // _log.finest('Create session with idToken $idToken');
 
-    var (err, sessionData) = await plugin.createSession(claims, authData);
+    var err= await plugin.createSession(claims);
     if (err.code != 200) {
       return (err, null);
     }
 
-    final cookie = _genRandomString(16);
+    final cookie = _genRandomString(cookieSize);
     var now = DateTime.now();
     final session = Session(
         cookie: cookie,
         claims: claims,
         createdAt: now,
         lastAccessTime: now,
-        data: sessionData);
+        );
     _sessionCache[cookie] = session;
+    await db.insertSession(session);
     _log.finest('Created session ${session.cookie}');
     return (null, session);
   }
@@ -99,6 +107,7 @@ class SessionManager {
   // Remove a session from the cache
   Future<void> deleteSession(Session session) async {
     _sessionCache.remove(session.cookie);
+    await db.deleteSession(session.cookie);
     await plugin.deleteSession(session.cookie);
   }
 

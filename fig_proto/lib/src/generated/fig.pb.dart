@@ -18,14 +18,14 @@ import 'package:protobuf/protobuf.dart' as $pb;
 class AuthenticateRequest extends $pb.GeneratedMessage {
   factory AuthenticateRequest({
     $core.String? idToken,
-    $core.String? jsonAuthData,
+    $core.Map<$core.String, $core.String>? additionalAuthData,
   }) {
     final $result = create();
     if (idToken != null) {
       $result.idToken = idToken;
     }
-    if (jsonAuthData != null) {
-      $result.jsonAuthData = jsonAuthData;
+    if (additionalAuthData != null) {
+      $result.additionalAuthData.addAll(additionalAuthData);
     }
     return $result;
   }
@@ -35,7 +35,7 @@ class AuthenticateRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AuthenticateRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'fig'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'idToken', protoName: 'idToken')
-    ..aOS(2, _omitFieldNames ? '' : 'jsonAuthData', protoName: 'jsonAuthData')
+    ..m<$core.String, $core.String>(2, _omitFieldNames ? '' : 'additionalAuthData', protoName: 'additionalAuthData', entryClassName: 'AuthenticateRequest.AdditionalAuthDataEntry', keyFieldType: $pb.PbFieldType.OS, valueFieldType: $pb.PbFieldType.OS, packageName: const $pb.PackageName('fig'))
     ..hasRequiredFields = false
   ;
 
@@ -69,17 +69,13 @@ class AuthenticateRequest extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearIdToken() => clearField(1);
 
-  /// additional authentication data
-  /// provides more context for the server plugin.
+  /// additional data provided by the client
+  ///  to the server to inform the auth decision (for example,
+  /// a member id entered into a text box).
+  /// This provides more context for the server plugin to make an auth decision.
   /// The client and server must sync on the format
   @$pb.TagNumber(2)
-  $core.String get jsonAuthData => $_getSZ(1);
-  @$pb.TagNumber(2)
-  set jsonAuthData($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasJsonAuthData() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearJsonAuthData() => clearField(2);
+  $core.Map<$core.String, $core.String> get additionalAuthData => $_getMap(1);
 }
 
 /// Responses.
@@ -151,7 +147,6 @@ class AuthenticateResponse extends $pb.GeneratedMessage {
   factory AuthenticateResponse({
     $core.String? sessionToken,
     FigErrorResponse? error,
-    $core.String? jsonAuthData,
   }) {
     final $result = create();
     if (sessionToken != null) {
@@ -159,9 +154,6 @@ class AuthenticateResponse extends $pb.GeneratedMessage {
     }
     if (error != null) {
       $result.error = error;
-    }
-    if (jsonAuthData != null) {
-      $result.jsonAuthData = jsonAuthData;
     }
     return $result;
   }
@@ -172,7 +164,6 @@ class AuthenticateResponse extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AuthenticateResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'fig'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'sessionToken', protoName: 'sessionToken')
     ..aOM<FigErrorResponse>(2, _omitFieldNames ? '' : 'error', subBuilder: FigErrorResponse.create)
-    ..aOS(3, _omitFieldNames ? '' : 'jsonAuthData', protoName: 'jsonAuthData')
     ..hasRequiredFields = false
   ;
 
@@ -216,18 +207,6 @@ class AuthenticateResponse extends $pb.GeneratedMessage {
   void clearError() => clearField(2);
   @$pb.TagNumber(2)
   FigErrorResponse ensureError() => $_ensure(1);
-
-  /// additional data to enrich the auth session. This is distinct
-  /// from authData in the AuthenticateRequest (although the plugin
-  /// may choose to copy some of that incoming authData to this field)
-  @$pb.TagNumber(3)
-  $core.String get jsonAuthData => $_getSZ(2);
-  @$pb.TagNumber(3)
-  set jsonAuthData($core.String v) { $_setString(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasJsonAuthData() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearJsonAuthData() => clearField(3);
 }
 
 class LogoffRequest extends $pb.GeneratedMessage {

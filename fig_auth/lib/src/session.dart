@@ -10,7 +10,7 @@ part 'session.g.dart';
 
 /// Represents a server session for an authenticated user.
 /// Contains data we need to evalaute the users roles, etc.
-/// You can include custom json [data] that will be serialized
+/// You can include custom json [additionalDataForClient] that will be serialized
 /// when the session is persisted.
 @JsonSerializable()
 class Session {
@@ -31,23 +31,16 @@ class Session {
   /// If the session has been persisted, or is just in memory
   bool persisted = false;
 
-  ///  [data] is an optional map used to pass
-  /// data back from a server plugin to the client.
-  /// This must be serializable toJson / fromJson to be passed
-  /// over the wire.
-  final Map<String,dynamic> data;
-
   /// Create a new session.
   ///
   /// [cookie] is the opaque session id.
   /// [claims] are the oidc claims from the provider.
-  /// [data] is additional data provided by plugins
+  /// [additionalDataForClient] is additional data provided by plugins
   Session({
     required this.cookie,
     required this.claims,
     required this.lastAccessTime,
     required this.createdAt,
-    required this.data,
   });
 
   factory Session.fromJson(Map<String,dynamic> json) => _$SessionFromJson(json);

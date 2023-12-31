@@ -17,10 +17,10 @@ final figAuthInterceptor = ClientAuthInterceptor();
 Future<User?> signInWithFirebase({
   required List<AuthProvider> authProviders,
   required BuildContext context,
-  required Future<String?> Function(Map<String, dynamic> authData) onSignIn,
+  // required Future<String?> Function(Map<String, String> authData) onSignIn,
   required Future Function() onSignOut,
   required FigAuthServiceClient authClient,
-  Map<String, dynamic> additionalAuthInfo = const {},
+  Map<String, String> additionalAuthInfo = const {},
   bool debug = false,
 }) async {
   var completer = Completer<User?>();
@@ -60,7 +60,7 @@ Future<User?> signInWithFirebase({
                       var resp =
                           await authClient.authenticate(AuthenticateRequest(
                         idToken: figAuthInterceptor.authToken,
-                        jsonAuthData: jsonEncode(additionalAuthInfo),
+                        additionalAuthData: {'foo': 'bar'},
                       ));
                       // print('Server Authentication response = $resp');
                       if (resp.error.code > 200) {
@@ -72,18 +72,6 @@ Future<User?> signInWithFirebase({
                       // This adds the auth token to every subsequent GRPC request
                       figAuthInterceptor.sessionToken = resp.sessionToken;
 
-                      // invoke callback to decode any additional info provided by the server
-                      // as part of the auth context.
-                      // coould be sectionId, sectiosn list, ec.
-                      // callback returns non null string on error
-                      var errString =
-                          await onSignIn(jsonDecode(resp.jsonAuthData));
-
-                      if (errString != null) {
-                        _showToast(context, errString);
-                        completer.complete(null);
-                        return;
-                      }
                     } catch (e) {
                       _showToast(context, e.toString());
                       completer.complete(null);

@@ -12,9 +12,11 @@ dependencies:
   logging: ^1.2.0
   openid_client: ^0.4.8
   json_annotation: ^4.8.1
+  drift: ^2.14.1
 
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.21.0
   json_serializable: ^6.7.1
   build_runner: ^2.3.3
+  drift_dev: ^2.14.1

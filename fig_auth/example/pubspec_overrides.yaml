@@ -3,3 +3,5 @@ dependency_overrides:
     path: ../../fig_proto
   fig_auth:
     path: ../
+  fig_gen:
+    path: ../../fig_gen

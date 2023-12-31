@@ -12,10 +12,12 @@ package fig;
 // validated, and if OK, a session will be created.
 message AuthenticateRequest {
     string idToken = 1;
-    // additional authentication data
-    // provides more context for the server plugin.
+    // additional data provided by the client
+    //  to the server to inform the auth decision (for example,
+    // a member id entered into a text box).
+    // This provides more context for the server plugin to make an auth decision.
     // The client and server must sync on the format
-    string jsonAuthData = 2;
+    map<string,string> additionalAuthData = 2;
 }
 
 // Responses.
@@ -27,13 +29,6 @@ message FigErrorResponse {
 message AuthenticateResponse {
     string sessionToken = 1; // session token that should be used in subquent client gRPC calls
     FigErrorResponse error = 2;
-    // additional data to enrich the auth session. This is data
-    // the *CLIENT* provides to the server to inform the auth decision (for example,
-    // a member id).
-    // This is different than the
-    // authData in the AuthenticateReques, which is data the *SERVER* provides to the client
-    // For example, membership level.
-    string jsonAuthData = 3;
 }
 
 message LogoffRequest {

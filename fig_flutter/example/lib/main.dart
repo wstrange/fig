@@ -158,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             // will be called to authenticate. Your server
                             // can return extra data (this is a Map)
                             // for example, loyalty number, etc.
-                            var (user, extraData) =
+                            var user =
                                 await figClient.signInWithFirebase(
                               authProviders: providers,
                               additionalAuthInfo: {'clubNumber': '1234'},
@@ -166,11 +166,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             );
                             // You might want to grab the firebase user data here for your app
                             print(
-                                'Firebase user = $user, extra data = $extraData)');
+                                'Firebase user = $user');
                             setState(() {
                               signedIn = true;
                               serverMessage =
-                                  'Signed in. \nextra auth data that the server returned to us:\n $extraData';
+                                  'Signed in';
                             });
                           },
                     child: signedIn ? Text('Sign Out') : Text('Sign in')),

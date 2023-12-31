@@ -14,7 +14,10 @@ dependencies:
   fig_proto: any
   logging: ^1.2.0
   openid_client: ^0.4.8
+  fig_gen: any
 
 dev_dependencies:
+  build_runner: ^2.4.7
   lints: ^2.0.0
   test: ^1.21.0
+  fig_gen: any

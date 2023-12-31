@@ -1,12 +1,18 @@
+import 'package:fig_auth/src/context.dart';
+
 import 'src/generated/example.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
-import 'context.dart';
+import 'app_context.dart';
 
 final logger = Logger('mySvc');
 
 // Sample RPC service
 class MySvc extends ExampleServiceBase {
+  final ContextManager contextMgr;
+
+  MySvc(this.contextMgr);
+
   /// Example method to fetch the callers context
   /// Your service methods will call this at the start of each method.
   Future<AppContext> getContext(ServiceCall call) async {
@@ -20,6 +26,8 @@ class MySvc extends ExampleServiceBase {
 
   @override
   Future<HelloResponse> hello(ServiceCall call, Hello request) async {
+
+
     // get the application context...
     var ctx = await getContext(call);
     var e = ctx.session.claims.email;

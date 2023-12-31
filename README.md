@@ -3,7 +3,7 @@
 Fig provides two packages:
 
 * fig_auth - for Dart server code. Implements an authentication framework for your Dart gRPC services.
-* fig_flutter - Provides client authentication to your gRPC dart server code
+* fig_flutter - Provides client authentication to your Dart gRPC server code
 
 Both packages delegate _authentication_ to Firebase. These packages provide a framework
 for integrating authentication into your gRPC services. 
@@ -54,13 +54,16 @@ not natively supported by web browsers.  In order to use gRPC in a web app, you 
 a flavour of gRPC (grpc-web) that can be sent over http/1.  The Envoy proxy
 converts this http/1 gRPC web traffic "native" gRPC over http/2.
 
+If your clients are native (Desktop or Mobile) do NOT go through envoy. You want to go
+directly to your gGRPC service.
+
 ---
 
 
-## fig_auth notes
+## fig_auth
 
 fig_auth is the server framework used to integrate gRPC authentication with the rest of your 
-gRPC services. The basic idea is that you "mixin" these gRPC calls with the rest of your services.
+gRPC services. The basic idea is that you "mixin" these gRPC services with your own.
 
 It consists of:
 
@@ -112,6 +115,35 @@ You can write your own plugin for your particular use case.
 
 See [SessionPlugin](fig_auth/lib/src/session_plugin.dart).
 
+### Service Context
+
+In your service methods you almost always want some context about the calling user. What
+is their email, user id, etc.  
+
+`fig_auth` provides a `getContext()` method:
+
+```dart
+@override
+Future<HelloResponse> hello(ServiceCall call, Hello request) async {
+  // get the application context...
+  var ctx = await getContext(call);
+  var e = ctx.session.claims.email;
+
+  logger.info('Hello request message= ${request.message} from=$e  extra context = ${ctx.extraGreeting}');
+
+  return HelloResponse(
+      message:
+          'hello authenticated person $e. \nI got your message "${request.message}"');
+}
+```
+
+The default context provides access to the session, which in turn provides the original OIDC
+claims provided by Firebase. 
+
+You can enrich the default Context by extending it and providing your own data. For example,
+you could provide additional data from a SQL table. You are responsible for populating
+and persisting the additional session data as part of the `SessionPlugin` life cycle 
+methods.
 
 ## fig_flutter
 
@@ -124,3 +156,4 @@ for validation. A session will be created, and the session cookie sent back to t
 A provided gRPC client interceptor will inject the session token into the `Authorization` header
 in subsequent calls to your gRPC services. 
 
+See the [example Flutter application](fig_flutter/example/lib/main.dart). 

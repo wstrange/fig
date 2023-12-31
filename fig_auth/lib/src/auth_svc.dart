@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:grpc/grpc.dart' hide Client;
 import 'package:logging/logging.dart';
@@ -24,8 +25,10 @@ class AuthService extends FigAuthServiceBase {
     this.unauthenticatedMethodNames = const [],
     SessionManager? sessionManager,
   }) {
+
+    var f = File('/tmp/foo.sql');
     // create a default memory only session manager if one is not provided
-    _sessionManager = sessionManager ?? SessionManager();
+    _sessionManager = sessionManager ?? SessionManager(databaseFile: f);
   }
 
   @override
@@ -40,11 +43,8 @@ class AuthService extends FigAuthServiceBase {
             error: FigErrorResponse(code: 403, message: msg));
       }
 
-      var m = jsonDecode(request.jsonAuthData) as Map<String, dynamic>;
-
       var (err, session) = await _sessionManager.createSession(
         claims: claims,
-        authData: m,
       );
 
       if (err != null || session == null) {
@@ -53,7 +53,6 @@ class AuthService extends FigAuthServiceBase {
 
       return AuthenticateResponse(
           sessionToken: session.cookie,
-          jsonAuthData: jsonEncode(session.data),
           error: FigErrorResponse(code: 200, message: 'ok'));
     } catch (e) {
       _log.severe('Error while trying to authenticate the user $e');
@@ -129,6 +128,7 @@ class AuthService extends FigAuthServiceBase {
       return GrpcError.unauthenticated(
           'No session found for authorization cookie');
     }
+
 
     return null; // call chain can proceed if there is no error
   }

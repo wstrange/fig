@@ -1,38 +1,34 @@
-import 'package:fig_auth/src/context.dart';
+import 'package:fig_auth/fig_auth.dart';
 
 import 'src/generated/example.pbgrpc.dart';
 import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
-import 'app_context.dart';
 
 final logger = Logger('mySvc');
 
 // Sample RPC service
 class MySvc extends ExampleServiceBase {
-  final ContextManager contextMgr;
+  final SessionManager sessionManager;
 
-  MySvc(this.contextMgr);
+  MySvc(this.sessionManager);
 
   /// Example method to fetch the callers context
   /// Your service methods will call this at the start of each method.
-  Future<AppContext> getContext(ServiceCall call) async {
-    // get the application context...
-    // This includes the OIDC claims in the session,
-    // but could be the user info or other app specfic data
-    var appContext = await contextMgr.getContext(call) as AppContext;
-    logger.info('App Context = $appContext');
-    return appContext;
+  Future<Session> getSession(ServiceCall call) async {
+    var s = await sessionManager.getSession(call.clientMetadata?['authorization'] ?? '');
+    // todo: maybe throw here instead?
+    return s!;
   }
 
+  // If the method is authenticated, the call to getSession should always work..
   @override
   Future<HelloResponse> hello(ServiceCall call, Hello request) async {
+    // get the session context...
+    var session = await getSession(call);
+    var e = session.claims.email;
 
-
-    // get the application context...
-    var ctx = await getContext(call);
-    var e = ctx.session.claims.email;
-
-    logger.info('Hello request message= ${request.message} from=$e  extra context = ${ctx.extraGreeting}');
+    logger.info(
+        'Hello request message= ${request.message} from=$e');
 
     return HelloResponse(
         message:
@@ -44,6 +40,8 @@ class MySvc extends ExampleServiceBase {
   Future<HelloResponse> hello_no_auth(ServiceCall call, Hello request) async {
     // dont call getContext() on unauthenticated calls
     logger.info('Hello no auth = ${request.message}');
-    return HelloResponse(message: 'no auth server method got your message:\n "${request.message}"');
+    return HelloResponse(
+        message:
+            'Unauthenticated server method got your message:\n "${request.message}"');
   }
 }

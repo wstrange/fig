@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'db.dart';
-import 'session_plugin.dart';
 import 'package:logging/logging.dart';
 import 'package:openid_client/openid_client.dart';
 import 'session.dart';
@@ -28,45 +27,44 @@ class SessionError implements Exception {
 /// storage.
 
 class SessionManager {
-  late SessionPlugin plugin;
   // map of cookies to sessions for cached lookup.
   final Map<String, Session> _sessionCache = {};
   final Duration sessionCachePurgeDuration;
+  final Duration sessionDatabasePurgeDuration;
+
   late Database db;
 
-  static final cookieSize = 16;
+  static const cookieSize = 16;
 
   SessionManager(
-      {SessionPlugin? sessionPlugin,
-      this.sessionCachePurgeDuration = const Duration(days: 1),
+      {this.sessionCachePurgeDuration = const Duration(days: 1),
+      this.sessionDatabasePurgeDuration = const Duration(days: 30),
       required File databaseFile}) {
-    // If no sessions plugins are provided, use a default one
-    plugin = sessionPlugin ?? DefaultSessionPlugin();
-    Timer.periodic(Duration(seconds: 30), _maintainSessionCache);
+    Timer.periodic(Duration(seconds: 60), _maintainSessionCache);
 
     db = Database(databaseFile: databaseFile);
-
-
   }
 
+  // Wake up and maintain the session cache and DB
   void _maintainSessionCache(Timer t) async {
+    // Loop through the in memory cache
+    var now = DateTime.now();
     for (final MapEntry(value: session) in _sessionCache.entries) {
-      var purgeTime = DateTime.now().subtract(sessionCachePurgeDuration);
+      var purgeTime = now.subtract(sessionCachePurgeDuration);
       if (session.lastAccessTime.isBefore(purgeTime)) {
-        _purge(session);
-        continue;
+        await deleteSession(session);
       }
-      if (session.persisted) continue;
-      await plugin.saveSession(session);
-      session.persisted = true;
     }
+    //
+    db.purgeSessionsCreatedBefore(now.subtract(sessionDatabasePurgeDuration));
   }
 
   /// Get the session based on the unique opaque [cookie].
+  /// todo: Do we update the session DB access time?
   Future<Session?> getSession(String cookie) async {
     Session? s = _sessionCache[cookie];
     if (s == null) {
-      s = await plugin.restoreSession(cookie);
+      s = await db.getSession(cookie);
       if (s == null) return null;
       _sessionCache[cookie] = s;
     }
@@ -85,30 +83,33 @@ class SessionManager {
   }) async {
     // _log.finest('Create session with idToken $idToken');
 
-    var err= await plugin.createSession(claims);
-    if (err.code != 200) {
-      return (err, null);
-    }
-
     final cookie = _genRandomString(cookieSize);
     var now = DateTime.now();
     final session = Session(
-        cookie: cookie,
-        claims: claims,
-        createdAt: now,
-        lastAccessTime: now,
-        );
+      cookie: cookie,
+      claims: claims,
+      createdAt: now,
+      lastAccessTime: now,
+      subject: claims.subject,
+    );
     _sessionCache[cookie] = session;
-    await db.insertSession(session);
-    _log.finest('Created session ${session.cookie}');
-    return (null, session);
+    try {
+      await db.insertSession(session);
+      _log.finest('Created session ${session.cookie}');
+      return (null, session);
+    } catch (e) {
+      return (
+        FigErrorResponse(
+            message: 'error creating session in DB: $e', code: 500),
+        null
+      );
+    }
   }
 
   // Remove a session from the cache
   Future<void> deleteSession(Session session) async {
     _sessionCache.remove(session.cookie);
     await db.deleteSession(session.cookie);
-    await plugin.deleteSession(session.cookie);
   }
 
   final _random = Random.secure();
@@ -116,27 +117,5 @@ class SessionManager {
   String _genRandomString(int len) {
     var values = List<int>.generate(len, (i) => _random.nextInt(255));
     return base64UrlEncode(values);
-  }
-  //
-  // Future<Session> deserializeFromDb(String cookie, String json) async {
-  //   var s = jsonDecode(json) as Map<String, dynamic>;
-  //   var cookie = s['cookie'] as String;
-  //   var claims = OpenIdClaims.fromJson(s['claims'] as Map<String, dynamic>);
-  //   var lastAccessTime = DateTime.parse(s['lastAccessTime']);
-  //   var createdAt = DateTime.parse(s['createdAt']);
-  //
-  //   return Session(
-  //     cookie: cookie,
-  //     claims: claims,
-  //     lastAccessTime: lastAccessTime,
-  //     createdAt: createdAt,
-  //     data: {},
-  //   );
-  // }
-
-  void _purge(Session session) {
-    // remove from cache
-    _sessionCache.remove(session.cookie);
-    plugin.deleteSession(session.cookie);
   }
 }

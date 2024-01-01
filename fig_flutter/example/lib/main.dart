@@ -119,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                     onPressed: () async {
                       try {
-                        var r = await client.hello(Hello(message: 'I am an authenticated person!'));
+                        var r = await client.hello(Hello(message: 'Hello from Flutter!'));
                         setState(() {
                           serverMessage = r.message;
                         });

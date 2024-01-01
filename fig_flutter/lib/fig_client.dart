@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
-import 'package:firebase_ui_auth/firebase_ui_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:firebase_ui_auth/firebase_ui_auth.dart' ;
 import 'package:flutter/material.dart';
 import 'auth.dart';
 import 'src/generated/fig.pbgrpc.dart';
@@ -37,13 +36,13 @@ class FigClient {
 
   /// Attempts to Sign in with Firebase. If successful, a Firebase [User] is returned.
   /// If the attempt is not a success, null is returned.
-  Future<User> signInWithFirebase({
+  Future<fb.User?> signInWithFirebase({
     required List<AuthProvider> authProviders,
     required BuildContext context,
     Map<String, String> additionalAuthInfo = const {},
     bool debug = false,
   }) async {
-    var completer = Completer<User>();
+    var completer = Completer<fb.User?>();
 
     unawaited(
       Navigator.of(context).push(
@@ -114,7 +113,7 @@ class FigClient {
   Future<void> signOut(BuildContext context) async {
     try {
       await _authClient.logoff(LogoffRequest());
-      await FirebaseAuth.instance.signOut();
+      await fb.FirebaseAuth.instance.signOut();
     } catch (e) {
       _showToast(context, 'Error on signOut. You can probably ignore this: $e');
     } finally {

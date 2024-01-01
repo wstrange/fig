@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'client_interceptor.dart';
@@ -14,7 +13,7 @@ final figAuthInterceptor = ClientAuthInterceptor();
 
 /// Attempts to Sign in with Firebase. If successful, a Firebase [User] is returned.
 /// If the attempt is not a success, null is returned.
-Future<User?> signInWithFirebase({
+Future<fb.User?> signInWithFirebase({
   required List<AuthProvider> authProviders,
   required BuildContext context,
   // required Future<String?> Function(Map<String, String> authData) onSignIn,
@@ -23,7 +22,7 @@ Future<User?> signInWithFirebase({
   Map<String, String> additionalAuthInfo = const {},
   bool debug = false,
 }) async {
-  var completer = Completer<User?>();
+  var completer = Completer<fb.User?>();
 
   _showToast(BuildContext context, String message) {
     if (context.mounted) {

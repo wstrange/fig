@@ -5,11 +5,11 @@ homepage:
 
 environment:
   sdk: '>=3.2.0-210.2.beta <4.0.0'
-  flutter: ">=1.17.0"
+  flutter: ">=3.18.0-0.2.pre"
 
 dependencies:
-  firebase_auth: ^4.10.1
-  firebase_ui_auth: ^1.9.0
+  firebase_auth: ^4.15.3
+  firebase_ui_auth: ^1.11.0
   flutter:
     sdk: flutter
   grpc: ^3.2.4
@@ -17,7 +17,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

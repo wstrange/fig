@@ -15,7 +15,13 @@ class SessionTbl extends Table {
       min: SessionManager.cookieSize, max: SessionManager.cookieSize)();
   DateTimeColumn get lastAccessTime => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
+  // OIDC claims as json / jwt
   TextColumn get claims => text().withLength(max: 1024)();
+
+  /// The oidc subject
+  /// Note the same subject could be logged in more than once
+  /// So this is not a unique column
+  TextColumn get subject => text()();
 
   @override
   Set<Column> get primaryKey => {cookie};
@@ -34,13 +40,14 @@ class Database extends _$Database {
   int get schemaVersion => 1;
 
   Future<void> insertSession(Session s) async {
-    var claims = s.claims.toJson();
+    var claims = jsonEncode(s.claims.toJson());
 
-    var news = await into(sessionTbl).insertReturning(SessionTblData(
+    await into(sessionTbl).insert(SessionTblCompanion.insert(
         cookie: s.cookie,
         lastAccessTime: s.lastAccessTime,
         createdAt: s.createdAt,
-        claims: jsonEncode(claims)));
+        claims: claims,
+        subject: s.claims.subject));
   }
 
   Future<Session?> getSession(String cookie) async {
@@ -53,19 +60,27 @@ class Database extends _$Database {
     print('companion = $c');
 
     var claims = OpenIdClaims.fromJson(jsonDecode(c.claims.value));
-
     print('claims = $claims');
     return Session(
       cookie: cookie,
       createdAt: c.createdAt.value,
       lastAccessTime: c.lastAccessTime.value,
+      subject: c.subject.value,
       claims: claims,
     );
   }
 
   Future<void> deleteSession(String cookie) async {
-    await delete(sessionTbl)
-      ..where((t) => t.cookie.equals(cookie))..go();
+    delete(sessionTbl)
+      ..where((t) => t.cookie.equals(cookie))
+      ..go();
+  }
+
+  // Delete any sessions created before the date
+  Future<void> purgeSessionsCreatedBefore(DateTime date) async {
+    delete(sessionTbl)
+      ..where((t) => t.createdAt.isSmallerOrEqualValue(date))
+      ..go();
   }
 }
 

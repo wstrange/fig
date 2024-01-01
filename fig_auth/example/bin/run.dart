@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:fig_serv_example/logging_interceptor.dart';
-import 'package:fig_serv_example/my_session_plugin.dart';
 import 'package:grpc/grpc.dart';
 import 'package:fig_auth/fig_auth.dart';
 import 'package:logging/logging.dart';
@@ -23,22 +24,14 @@ void main(List<String> arguments) async {
     print('${record.level.name}: ${record.time}: ${record.message}');
   });
 
-  final sessionManager = SessionManager(sessionPlugin: MySessionPlugins());
+  var f = File('/tmp/sessionExample.sql');
+  // clear out the persisent db for the demo..
+  // f.deleteSync();
 
-// Context provided to authenticated grpc calls.
-  final contextMgr = ContextManager(
-      sessionManager: sessionManager,
-      // Called when a context is created. THis is where you can
-      // enhance the context with application specific info needed
-      // by your grpc methods.
-      // return a Context (or subclass)
-      onContextCreate: (session) async {
-        return AppContext(session, extraGreeting: 'and a good day to you!');
-      });
-
+  final sessionManager = SessionManager(databaseFile: f);
 
   // MySvc isyour grpc service
-  final svc = MySvc(contextMgr);
+  final svc = MySvc(sessionManager);
 
   // AuthService is the required Fig Authentication service.
   final authSvc = AuthService(

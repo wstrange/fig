@@ -28,6 +28,9 @@ class Session {
   /// When the session was first created
   final DateTime createdAt;
 
+  // The subject (unique id) from the OIDC provider
+  final String subject;
+
   /// If the session has been persisted, or is just in memory
   bool persisted = false;
 
@@ -39,6 +42,7 @@ class Session {
   Session({
     required this.cookie,
     required this.claims,
+    required this.subject,
     required this.lastAccessTime,
     required this.createdAt,
   });

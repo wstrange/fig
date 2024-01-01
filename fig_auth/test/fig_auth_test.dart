@@ -6,11 +6,7 @@ import 'dart:io';
 
 void main() {
 
-  late File dbFile;
-
-  setUp(() {
-    dbFile = File('/tmp/sessionDb.sql');
-  });
+  final dbFile = File('/tmp/sessionDb.sql');
 
   tearDown(() async { await dbFile.delete();});
 
@@ -42,7 +38,6 @@ void main() {
 
     // delete it again - should not cause problems
     await sm.deleteSession(s);
-
 
   });
 }

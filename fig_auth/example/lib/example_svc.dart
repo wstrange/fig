@@ -13,11 +13,15 @@ class MySvc extends ExampleServiceBase {
   MySvc(this.sessionManager);
 
   /// Example method to fetch the callers context
-  /// Your service methods will call this at the start of each method.
+  /// Your service methods call this at the start of each method.
   Future<Session> getSession(ServiceCall call) async {
     var s = await sessionManager.getSession(call.clientMetadata?['authorization'] ?? '');
-    // todo: maybe throw here instead?
-    return s!;
+    if( s == null ) {
+      throw GrpcError.internal('Session could not be found');
+    }
+    // You might want to look up Application info from the database,
+    // and return it to each one of your gRPC calls.
+    return s; // For now - just return the Session.
   }
 
   // If the method is authenticated, the call to getSession should always work..

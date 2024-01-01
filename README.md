@@ -6,12 +6,13 @@ Fig provides two packages:
 * fig_flutter - Provides client authentication to your Dart gRPC server code
 
 Both packages delegate _authentication_ to Firebase. These packages provide a framework
-for integrating authentication into your gRPC services. 
+for integrating authentication and session managment into your gRPC services. 
 
 Use this if:
 
-* Your server is written in Dart.
+* You want to write your server in Dart.
 * You want your Flutter client to interact with your Dart server using gRPC instead of http/json.
+* You need basic session management.
 
 This code is lightly tested and POC quality. If there is further interest let's collaborate.
 
@@ -70,6 +71,7 @@ It consists of:
 * Generated gRPC/protobuf methods to handle client authentication calls. 
 * A service interceptor that will check for a valid session before forwarding the call to your
  services.
+* A session manager to manage session lifetimes and session persistence.
 
 The AuthService is initialized like this:
 
@@ -101,53 +103,49 @@ To create the Server:
 
 ```
 `svc` above is a handle to your own custom gRPC services.  The `authSvc.authInterceptor` is required
-as it enforces service authenication. 
+as it enforces service authentication. 
 
 See [run.dart](fig_auth/example/bin/run.dart) for a complete example.
 
 
-### Session Manager
+### Session Management
 
-`fig_auth` provides a primitive session management service. Sessions by default are stored in 
-a in-memory hashmap keyed by the session id. The `SessionManager` interface supports
-plugins to persist or retrieve sessions to alternate storage schemes (SQL, for example).
-You can write your own plugin for your particular use case.
+`fig_auth` provides a simple session management service. Sessions are cached in 
+in-memory and persisted to a sqllite database. You can retrieve session information 
+in your gRPC methods, including OIDC claims. In particular, the OIDC subject can
+be used as a user key in your database.  See [the service example](fig_auth/example/lib/example_svc.dart) 
 
-See [SessionPlugin](fig_auth/lib/src/session_plugin.dart).
-
-### Service Context
-
-In your service methods you almost always want some context about the calling user. What
-is their email, user id, etc.  
-
-`fig_auth` provides a `getContext()` method:
+Your sample utility method looks something like:
 
 ```dart
-@override
-Future<HelloResponse> hello(ServiceCall call, Hello request) async {
-  // get the application context...
-  var ctx = await getContext(call);
-  var e = ctx.session.claims.email;
 
-  logger.info('Hello request message= ${request.message} from=$e  extra context = ${ctx.extraGreeting}');
-
-  return HelloResponse(
-      message:
-          'hello authenticated person $e. \nI got your message "${request.message}"');
+/// Example method to fetch the callers context
+/// Your service methods call this at the start of each method.
+Future<Session> getSession(ServiceCall call) async {
+ var s = await sessionManager.getSession(call.clientMetadata?['authorization'] ?? '');
+ if( s == null ) {
+  throw GrpcError.internal('Session could not be found');
+ }
+ // You might want to look up Application info from the database,
+ // and return it to each one of your gRPC calls. 
+ return s; // For now - just return the Session.
 }
 ```
 
-The default context provides access to the session, which in turn provides the original OIDC
-claims provided by Firebase. 
+In your gRPC method, you would call this:
 
-You can enrich the default Context by extending it and providing your own data. For example,
-you could provide additional data from a SQL table. You are responsible for populating
-and persisting the additional session data as part of the `SessionPlugin` life cycle 
-methods.
+```dart
+// If the method is authenticated, the call to getSession should always work..
+@override
+Future<HelloResponse> hello(ServiceCall call, Hello request) async {
+ // get the session context...
+ var session = await getSession(call)
+ // do something with session.claims, session.subject, etc....
+```
 
 ## fig_flutter
 
-This is the Flutter client package that integrates with the `fig_auth` service.
+The Flutter client package that integrates with the `fig_auth` service.
 
 fig_flutter delegates authentication to Firebase using the FlutterFire UI. On succesfull 
 authentication, the OIDC token obtained from Firebase will be sent to the `fig_auth` service

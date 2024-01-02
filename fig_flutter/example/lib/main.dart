@@ -3,11 +3,8 @@ import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
-// For mobile use this
-// import 'package:grpc/grpc.dart';
-// For web, use this:
-import 'package:grpc/grpc_web.dart';
+import 'package:grpc/grpc_or_grpcweb.dart';
+// import 'package:grpc/grpc_or_grpcweb.dart';
 import 'firebase_options.dart';
 import 'src/generated/example.pbgrpc.dart';
 
@@ -23,19 +20,32 @@ var providers = <AuthProvider>[
 ];
 
 /// Replace this with the hostname of your gRPC server
-const hostName = 'localhost';
+// const hostName = 'localhost';
+const hostName = 'warrens-air.lan';
 
-/// For flutter mobile, use this:
-// final channel = ClientChannel(hostName,
-//     port: 50051,
-//     options: const ChannelOptions(
-//         connectTimeout: Duration(seconds: 20),
-//         credentials: ChannelCredentials.insecure()));
+// final channel = GrpcWebClientChannel.xhr(Uri.parse('http://$hostName:9080'));
 
-final channel = GrpcWebClientChannel.xhr(Uri.parse('http://${hostName}:9080'));
+// For web
+// final webChannel = GrpcWebClientChannel.xhr(Uri.parse('http://$hostName:9080'));
 
-/// THe auth client to handle our gRPC authentication calls.
-final figClient = FigClient(channel: channel);
+final channel = GrpcOrGrpcWebClientChannel.toSeparateEndpoints(
+    grpcHost: hostName,
+    grpcWebHost: 'localhost',
+    grpcPort: 50051,
+    grpcWebPort: 9080,
+    grpcTransportSecure: false,
+    grpcWebTransportSecure: false);
+
+// final channel = GrpcOrGrpcWebClientChannel(
+//   host: host,
+//   grpcPort: grpcPort,
+//   grpcWebPort: grpcWebPort,
+//   secure: false,
+// );
+
+// The client must be one of the web or http2 channels:
+// final figClient = FigClient.fromWebChannel(webChannel);
+final figClient = FigClient(channel);
 
 /// Initialize our gRPC client. You MUST include the fig interceptor
 final client = ExampleClient(channel, interceptors: [figClient.interceptor]);
@@ -87,22 +97,22 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Container(
-        padding: EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(10.0),
         alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
+            Wrap(
+              direction: Axis.horizontal,
               children: [
                 ElevatedButton(
                     onPressed: () async {
                       try {
-                        var r = await client
-                            .hello_no_auth(Hello(message: 'Hello from unauthenticated Fig client'));
+                        var r = await client.hello_no_auth(Hello(
+                            message: 'Hello from unauthenticated Fig client'));
                         print('response = ${r.message}');
                         setState(() {
                           serverMessage = r.message;
@@ -114,12 +124,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       }
                     },
-                    child: Text('Say Hello: No Authentication required')),
-                SizedBox(width: 20,),
+                    child: const Text('Say Hello: No Authentication required')),
+                const SizedBox(
+                  width: 20,
+                ),
                 ElevatedButton(
                     onPressed: () async {
                       try {
-                        var r = await client.hello(Hello(message: 'Hello from Flutter!'));
+                        var r = await client
+                            .hello(Hello(message: 'Hello from Flutter!'));
                         setState(() {
                           serverMessage = r.message;
                         });
@@ -129,10 +142,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       }
                     },
-                    child: Text('Say Hello - Auth required')),
+                    child: const Text('Say Hello - Auth required')),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
             Row(
@@ -158,25 +171,23 @@ class _MyHomePageState extends State<MyHomePage> {
                             // will be called to authenticate. Your server
                             // can return extra data (this is a Map)
                             // for example, loyalty number, etc.
-                            var user =
-                                await figClient.signInWithFirebase(
+                            var user = await figClient.signInWithFirebase(
                               authProviders: providers,
-                              additionalAuthInfo: {'clubNumber': '1234'},
                               context: context,
                             );
                             // You might want to grab the firebase user data here for your app
-                            print(
-                                'Firebase user = $user');
+                            print('Firebase user = $user');
                             setState(() {
                               signedIn = true;
-                              serverMessage =
-                                  'Signed in';
+                              serverMessage = 'Signed in';
                             });
                           },
-                    child: signedIn ? Text('Sign Out') : Text('Sign in')),
+                    child: signedIn
+                        ? const Text('Sign Out')
+                        : const Text('Sign in')),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
             Row(
@@ -186,8 +197,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text('Last grpc message received from server:'),
-                      SizedBox(height: 20),
+                      const Text('Last grpc message received from server:'),
+                      const SizedBox(height: 20),
                       SelectableText(
                         serverMessage,
                         style: Theme.of(context).textTheme.headlineMedium,

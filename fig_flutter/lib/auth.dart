@@ -24,12 +24,12 @@ Future<fb.User?> signInWithFirebase({
 }) async {
   var completer = Completer<fb.User?>();
 
-  _showToast(BuildContext context, String message) {
+  showToast(BuildContext context, String message) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: Duration(seconds: 20),
+          duration: const Duration(seconds: 20),
         ),
       );
     }
@@ -63,8 +63,11 @@ Future<fb.User?> signInWithFirebase({
                       ));
                       // print('Server Authentication response = $resp');
                       if (resp.error.code > 200) {
-                        _showToast(
+
+                        if(context.mounted) {
+                          showToast(
                             context, 'Could  not authenticate to server $resp');
+                        }
                         completer.complete(null);
                         return;
                       }
@@ -72,7 +75,9 @@ Future<fb.User?> signInWithFirebase({
                       figAuthInterceptor.sessionToken = resp.sessionToken;
 
                     } catch (e) {
-                      _showToast(context, e.toString());
+                      if( context.mounted) {
+                        showToast(context, e.toString());
+                      }
                       completer.complete(null);
                     }
                     completer.complete(user);

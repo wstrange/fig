@@ -3,23 +3,21 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' ;
 import 'package:flutter/material.dart';
+// import 'package:grpc/grpc.dart';
+import 'package:grpc/grpc_or_grpcweb.dart';
 import 'auth.dart';
 import 'src/generated/fig.pbgrpc.dart';
-// import 'package:grpc/grpc.dart';
-import 'package:grpc/grpc_web.dart';
 import 'client_interceptor.dart';
 
-typedef JsonMap = Map<String, dynamic>;
-const JsonMap _emptyMap = {};
 
 class FigClient {
+  late final FigAuthServiceClient _authClient;
+  final GrpcOrGrpcWebClientChannel channel;
   // final ClientChannel channel;
-  final GrpcWebClientChannel channel;
-  late FigAuthServiceClient _authClient;
 
   final interceptor = ClientAuthInterceptor();
 
-  FigClient({required this.channel}) {
+  FigClient(this.channel) {
     _authClient = FigAuthServiceClient(channel, interceptors: [interceptor]);
   }
 
@@ -28,7 +26,7 @@ class FigClient {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          duration: Duration(seconds: 20),
+          duration: const Duration(seconds: 20),
         ),
       );
     }
@@ -39,7 +37,6 @@ class FigClient {
   Future<fb.User?> signInWithFirebase({
     required List<AuthProvider> authProviders,
     required BuildContext context,
-    Map<String, String> additionalAuthInfo = const {},
     bool debug = false,
   }) async {
     var completer = Completer<fb.User?>();
@@ -68,12 +65,14 @@ class FigClient {
                         var resp =
                             await _authClient.authenticate(AuthenticateRequest(
                           idToken: figAuthInterceptor.authToken,
-                          additionalAuthData:additionalAuthInfo,
                         ));
                         // print('Server Authentication response = $resp');
                         if (resp.error.code > 200) {
-                          _showToast(
-                              context, 'Error authenticating to server $resp');
+                          if( context.mounted) {
+                            _showToast(
+                                context,
+                                'Error authenticating to server $resp');
+                          }
                           completer.complete(null);
                           return;
                         }
@@ -84,7 +83,7 @@ class FigClient {
 
 
                       } catch (e) {
-                        _showToast(context, e.toString());
+                        if( context.mounted ) _showToast(context, e.toString());
                         completer.complete(null);
                       }
                       return;
@@ -115,7 +114,7 @@ class FigClient {
       await _authClient.logoff(LogoffRequest());
       await fb.FirebaseAuth.instance.signOut();
     } catch (e) {
-      _showToast(context, 'Error on signOut. You can probably ignore this: $e');
+      if(context.mounted) _showToast(context, 'Error on signOut. You can probably ignore this: $e');
     } finally {
       interceptor.authToken = null;
       interceptor.sessionToken = null;

@@ -92,7 +92,9 @@ LazyDatabase _openConnection(File databaseFile,
       try {
         print('Deleting database ${databaseFile.path}');
         databaseFile.deleteSync();
-      } catch (e) {}
+      } catch (e) {
+        // ignore if the file does not exist..
+      }
     }
 
     return NativeDatabase.createInBackground(databaseFile,

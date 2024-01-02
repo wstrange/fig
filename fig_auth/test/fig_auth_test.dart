@@ -19,8 +19,9 @@ void main() {
     var (err,session) = await sm.createSession(claims: claims);
     expect(session, isNotNull);
 
-    if( session == null )
+    if( session == null ) {
       fail('Cant create session $err');
+    }
 
     print(session);
 

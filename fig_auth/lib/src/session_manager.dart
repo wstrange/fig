@@ -40,7 +40,7 @@ class SessionManager {
       {this.sessionCachePurgeDuration = const Duration(days: 1),
       this.sessionDatabasePurgeDuration = const Duration(days: 30),
       required File databaseFile}) {
-    Timer.periodic(Duration(seconds: 60), _maintainSessionCache);
+    Timer.periodic(Duration(seconds: 600), _maintainSessionCache);
 
     db = Database(databaseFile: databaseFile);
   }

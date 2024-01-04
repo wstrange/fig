@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_ui_auth/firebase_ui_auth.dart' ;
 import 'package:flutter/material.dart';
-// import 'package:grpc/grpc.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
-import 'auth.dart';
 import 'src/generated/fig.pbgrpc.dart';
 import 'client_interceptor.dart';
 
@@ -59,14 +57,14 @@ class FigClient {
 
                       try {
                         var idToken = await user.getIdToken();
-                        figAuthInterceptor.authToken = idToken;
+                        interceptor.authToken = idToken;
 
-                        //print('Got auth token from firebase = $idToken');
+                        print('Got auth token from firebase = $idToken');
                         var resp =
                             await _authClient.authenticate(AuthenticateRequest(
-                          idToken: figAuthInterceptor.authToken,
+                          idToken: interceptor.authToken,
                         ));
-                        // print('Server Authentication response = $resp');
+                        print('Server Authentication response = $resp');
                         if (resp.error.code > 200) {
                           if( context.mounted) {
                             _showToast(
@@ -78,7 +76,7 @@ class FigClient {
                         }
                         // This adds the auth token to every subsequent GRPC request
                         interceptor.sessionToken = resp.sessionToken;
-
+                        print('session token ${interceptor.sessionToken}');
                         completer.complete(user);
 
 

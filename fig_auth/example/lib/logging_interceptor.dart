@@ -12,8 +12,7 @@ Future<GrpcError?> loggingInterceptor(
   final authority = clientMetadata[':authority'];
   final methodName = clientMetadata[':path'];
   final method = clientMetadata[':method'];
-  final userAgent = clientMetadata['user-agent'];
 
-  _logger.info('$authority - - [$dateTime] $method $methodName $userAgent');
+  _logger.info('FIG: $authority - - [$dateTime] $method $methodName');
   return null;
 }

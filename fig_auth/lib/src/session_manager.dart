@@ -47,15 +47,11 @@ class SessionManager {
 
   // Wake up and maintain the session cache and DB
   void _maintainSessionCache(Timer t) async {
-    // Loop through the in memory cache
-    var now = DateTime.now();
-    for (final MapEntry(value: session) in _sessionCache.entries) {
-      var purgeTime = now.subtract(sessionCachePurgeDuration);
-      if (session.lastAccessTime.isBefore(purgeTime)) {
-        await deleteSession(session);
-      }
-    }
-    //
+    final now = DateTime.now();
+    final purgeTime = now.subtract(sessionCachePurgeDuration);
+    _sessionCache.removeWhere((key, session) =>
+       session.lastAccessTime.isBefore(purgeTime));
+
     db.purgeSessionsCreatedBefore(now.subtract(sessionDatabasePurgeDuration));
   }
 
@@ -72,7 +68,7 @@ class SessionManager {
     return s;
   }
 
-  //  Lookup or create a session based on the OIDC [claims].
+  //  Create a session based on the OIDC [claims].
   //
   //  This is called from the [AuthService.authenticate{}] method..
   //  The claims are verified before calling this method.
@@ -84,7 +80,7 @@ class SessionManager {
     // _log.finest('Create session with idToken $idToken');
 
     final cookie = _genRandomString(cookieSize);
-    var now = DateTime.now();
+    final now = DateTime.now();
     final session = Session(
       cookie: cookie,
       claims: claims,

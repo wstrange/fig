@@ -15,9 +15,8 @@ Use this if:
 * You want your Flutter client to interact with your Dart server using gRPC instead of http/json.
 * You need basic session management.
 
-This pattern is described in 
-[ https://warrenstrange.medium.com/flutter-web-a-dart-grpc-server-and-firebase-authentication-9b6fb4593593
-](this article)
+This pattern is described in [this article](https://warrenstrange.medium.com/flutter-web-a-dart-grpc-server-and-firebase-authentication-9b6fb4593593
+)
 
 This code is lightly tested and POC quality. If there is further interest let's collaborate to 
 make it production ready.

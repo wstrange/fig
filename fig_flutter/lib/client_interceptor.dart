@@ -78,10 +78,6 @@ class ClientAuthInterceptor implements ClientInterceptor {
         await response;
       } catch (e) {
         if (e is GrpcError && e.code == StatusCode.unauthenticated) {
-          //print('User unauthenticated. Do something smart');
-          // If the user provides a callback, invoke it
-          // The callback could trigger a message, or redirect the user to
-          // the login page.
           await onError?.call(e);
           // Trigger firebase logout...
           await FirebaseAuth.instance.signOut();

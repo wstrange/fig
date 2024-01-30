@@ -10,8 +10,6 @@ part 'session.g.dart';
 
 /// Represents a server session for an authenticated user.
 /// Contains data we need to evalaute the users roles, etc.
-/// You can include custom json [additionalDataForClient] that will be serialized
-/// when the session is persisted.
 @JsonSerializable()
 class Session {
   ///  [cookie] - an opaque random string representing the session
@@ -32,13 +30,13 @@ class Session {
   final String subject;
 
   /// If the session has been persisted, or is just in memory
-  bool persisted = false;
+  /// todo: Not clear the value of this...
+  // bool persisted = false;
 
   /// Create a new session.
   ///
   /// [cookie] is the opaque session id.
   /// [claims] are the oidc claims from the provider.
-  /// [additionalDataForClient] is additional data provided by plugins
   Session({
     required this.cookie,
     required this.claims,

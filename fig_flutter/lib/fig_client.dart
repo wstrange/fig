@@ -8,10 +8,18 @@ import 'src/generated/fig.pbgrpc.dart';
 import 'client_interceptor.dart';
 
 
+/// The client that authenticates agains the Fig grpc server
+///
+/// The [signInWithFirebase] method shows the Firebase auth UI and
+/// authenticates the user. An ODIC token from Firebase is sent to
+/// the Fig service, and if the token is valid, a session cookie
+/// will be returned to us.  This session cookie is saved
+/// to the client interceptor. Subsequent grpc calls will have the
+/// cookie injected.
+///
 class FigClient {
   late final FigAuthServiceClient _authClient;
   final GrpcOrGrpcWebClientChannel channel;
-  // final ClientChannel channel;
 
   final interceptor = ClientAuthInterceptor();
 

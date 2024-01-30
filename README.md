@@ -2,7 +2,8 @@
 
 Fig provides two packages:
 
-* fig_auth - for Dart server code. Implements an authentication framework for your Dart gRPC services.
+* fig_auth - for Dart _server_ code. Implements an authentication  and session management 
+ framework for your Dart gRPC services.
 * fig_flutter - Provides client authentication to your Dart gRPC server code
 
 Both packages delegate _authentication_ to Firebase. These packages provide a framework
@@ -10,26 +11,31 @@ for integrating authentication and session managment into your gRPC services.
 
 Use this if:
 
-* You want to write your server in Dart.
+* You want to write your server using Dart.
 * You want your Flutter client to interact with your Dart server using gRPC instead of http/json.
 * You need basic session management.
 
-This code is lightly tested and POC quality. If there is further interest let's collaborate.
+This pattern is described in (this article) 
+ [https://warrenstrange.medium.com/flutter-web-a-dart-grpc-server-and-firebase-authentication-9b6fb4593593].
+
+
+This code is lightly tested and POC quality. If there is further interest let's collaborate to 
+make it production ready.
 
 ## How it works: The Readers Digest version
 
-* The Flutter client authenticates to Firebase and obtains an OIDC token.
+* The Flutter client authenticates to Firebase and obtains an OIDC jwt token.
 * The client calls the `Authenticate` gRPC method provided by `fig_auth`, passing along the OIDC token.
 * The `fig_auth` package validates the OIDC token using PKI.
 * If the token is valid, fig_auth creates a `Session` for the user, and returns an opaque session cookie
 to the client in the response.
-* The client provides the session cookie in subsequent calls using a gRPC `Authorization` header.
-* The interceptor provided by `fig_auth` looks for a valid session cookie. If the cookie is valid, and 
+* The client provides the session cookie in subsequent calls using a gRPC `Authorization` header. This
+ is injected into gRPC calls by a client interceptor. 
+* The service interceptor provided by `fig_auth` looks for a valid session cookie. If the cookie is valid, and 
  the session has not timed out, the call will be allowed to proceed to your gRPC method. If the
  session is not valid, or a cookie is not provided, a gRPC error will be returned to the client.
 * You can mark some of your gRPC methods as being unauthenticated. The interceptor will not enforce
  the previous rules.
-
   
 ## Running the example
 
@@ -63,27 +69,28 @@ directly to your gGRPC service.
 
 ## fig_auth
 
-fig_auth is the server framework used to integrate gRPC authentication with the rest of your 
-gRPC services. The basic idea is that you "mixin" these gRPC services with your own.
-
-It consists of:
+fig_auth is the server framework used to integrate gRPC authentication with your own
+gRPC services. It consists of:
 
 * Generated gRPC/protobuf methods to handle client authentication calls. 
-* A service interceptor that will check for a valid session before forwarding the call to your
+* A service interceptor that will check for a valid session before forwarding calls to your
  services.
 * A session manager to manage session lifetimes and session persistence.
 
 The AuthService is initialized like this:
 
 ```dart
-// AuthService is the required Fig Authentication service.
-  final authSvc = AuthService(
-      firebaseProjectId: firebaseId,
-      sessionManager: sessionManager,
-      // A list of grpc methods that will NOT be authenticated.
-      unauthenticatedMethodNames: ['hello_no_auth',]);
-```
 
+// create a session manager. The session database is persisted to the specified file
+final sessionManager = SessionManager(databaseFile: f);
+
+// AuthService is the required Fig Authentication service.
+final authSvc = AuthService(
+    firebaseProjectId: firebaseId,
+    sessionManager: sessionManager,
+    // A list of grpc methods that will NOT be authenticated.
+    unauthenticatedMethodNames: ['hello_no_auth',]);
+```
 
 Provide your firebase project id, and a list of gRPC method names that you do not want to enforce
 authentication on (all other methods will be intercepted).
@@ -91,8 +98,7 @@ authentication on (all other methods will be intercepted).
 To create the Server:
 
 ```dart
- final server = Server.create(
-    services: [authSvc, svc],
+ final server = Server.create( services: [authSvc, svc],
     // you MUST include the authInterceptor
     interceptors: [loggingInterceptor, authSvc.authInterceptor],
     codecRegistry: CodecRegistry(codecs: const [GzipCodec(),
@@ -102,6 +108,8 @@ To create the Server:
     ]),
 
 ```
+
+
 `svc` above is a handle to your own custom gRPC services.  The `authSvc.authInterceptor` is required
 as it enforces service authentication. 
 
@@ -113,7 +121,8 @@ See [run.dart](fig_auth/example/bin/run.dart) for a complete example.
 `fig_auth` provides a simple session management service. Sessions are cached in 
 in-memory and persisted to a sqllite database. You can retrieve session information 
 in your gRPC methods, including OIDC claims. In particular, the OIDC subject can
-be used as a user key in your database.  See [the service example](fig_auth/example/lib/example_svc.dart) 
+be used as a user key in your database.  
+ See [the service example](fig_auth/example/lib/example_svc.dart) 
 
 Your sample utility method looks something like:
 
@@ -139,7 +148,7 @@ In your gRPC method, you would call this:
 @override
 Future<HelloResponse> hello(ServiceCall call, Hello request) async {
  // get the session context...
- var session = await getSession(call)
+ var session = await getSession(call);
  // do something with session.claims, session.subject, etc....
 ```
 
@@ -151,7 +160,8 @@ fig_flutter delegates authentication to Firebase using the FlutterFire UI. On su
 authentication, the OIDC token obtained from Firebase will be sent to the `fig_auth` service
 for validation. A session will be created, and the session cookie sent back to the client.
 
-A provided gRPC client interceptor will inject the session token into the `Authorization` header
+A provided gRPC client interceptor injects the session token into the `Authorization` header
 in subsequent calls to your gRPC services. 
 
-See the [example Flutter application](fig_flutter/example/lib/main.dart). 
+See the [example Flutter application](fig_flutter/example/lib/main.dart).
+

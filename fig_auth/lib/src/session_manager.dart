@@ -18,13 +18,14 @@ class SessionError implements Exception {
 
 /// Manage user sessions.
 ///
-/// Sessions are stored in an in-memory hashmap. This will be scalable
+/// Sessions are cached in a in-memory hashmap and persisted to
+/// a sqlite database. This will be scalable
 /// to a moderate number of users (depending on your usage and memory). Say
-/// hundreds or perhaps several thousand.
+/// a few thousand.
 ///
-/// When creating a [SessionManager] you can provide optional [SessionPlugin]s to
-/// create,save,restore and delete the session to persistent
-/// storage.
+/// Because sessions are persisted to sqllite, restarting the server
+/// will retain existing sessions.
+///
 
 class SessionManager {
   // map of cookies to sessions for cached lookup.
@@ -36,6 +37,13 @@ class SessionManager {
 
   static const cookieSize = 16;
 
+  ///
+  /// Create a session manager
+  /// [sessionDatabasePurgeDuration] is the duration that sessions
+  ///  live for in the in-memory cache.
+  ///  [sessionDatabasePurgeDuration] is the duration that session live
+  ///  in the persistent sqllite database.
+  ///  [databaseFile] is the sqllite database location.
   SessionManager(
       {this.sessionCachePurgeDuration = const Duration(days: 1),
       this.sessionDatabasePurgeDuration = const Duration(days: 30),
@@ -56,7 +64,9 @@ class SessionManager {
   }
 
   /// Get the session based on the unique opaque [cookie].
-  /// todo: Do we update the session DB access time?
+  /// Looks in the cache first, then the database.
+  /// todo: Do we update the session DB access time? Consider a dirty
+  /// flag on the Session object, to denote it should be flushed to the DB
   Future<Session?> getSession(String cookie) async {
     Session? s = _sessionCache[cookie];
     if (s == null) {

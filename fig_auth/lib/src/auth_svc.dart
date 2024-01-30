@@ -10,10 +10,12 @@ import 'generated/fig.pbgrpc.dart';
 
 final _log = Logger('fb_auth_svc');
 
+/// The Authentication Service that validates Firebase OIDC tokens
+/// and creates / deletes sessions.
 class AuthService extends FigAuthServiceBase {
   // The firebase project to verify authentication tokens against
   final String firebaseProjectId;
-  // Grpc that should *not* be intercepted for authentication.
+  // Grpc methods that should *not* be intercepted for authentication.
   // note that the 'authenticate' method provided by this package
   // will never be intercepted.
   final List<String> unauthenticatedMethodNames;

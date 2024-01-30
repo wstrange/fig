@@ -28,9 +28,10 @@ void main(List<String> arguments) async {
   // clear out the persisent db for the demo..
   // f.deleteSync();
 
+  // Create a session manager with data peristed to the File f
   final sessionManager = SessionManager(databaseFile: f);
 
-  // MySvc isyour grpc service
+  // MySvc is your grpc service
   final svc = MySvc(sessionManager);
 
   // AuthService is the required Fig Authentication service.

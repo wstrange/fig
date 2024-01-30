@@ -4,7 +4,6 @@ import 'package:firebase_ui_oauth_google/firebase_ui_oauth_google.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:grpc/grpc_or_grpcweb.dart';
-// import 'package:grpc/grpc_or_grpcweb.dart';
 import 'firebase_options.dart';
 import 'src/generated/example.pbgrpc.dart';
 
@@ -20,14 +19,10 @@ var providers = <AuthProvider>[
 ];
 
 /// Replace this with the hostname of your gRPC server
-// const hostName = 'localhost';
-const hostName = 'warrens-air.lan';
+const hostName = 'localhost';
+// const hostName = 'warrens-air.lan';
 
-// final channel = GrpcWebClientChannel.xhr(Uri.parse('http://$hostName:9080'));
-
-// For web
-// final webChannel = GrpcWebClientChannel.xhr(Uri.parse('http://$hostName:9080'));
-
+// Create a channel supporting both Web and http/2 calls.
 final channel = GrpcOrGrpcWebClientChannel.toSeparateEndpoints(
     grpcHost: hostName,
     grpcWebHost: 'localhost',
@@ -36,15 +31,6 @@ final channel = GrpcOrGrpcWebClientChannel.toSeparateEndpoints(
     grpcTransportSecure: false,
     grpcWebTransportSecure: false);
 
-// final channel = GrpcOrGrpcWebClientChannel(
-//   host: host,
-//   grpcPort: grpcPort,
-//   grpcWebPort: grpcWebPort,
-//   secure: false,
-// );
-
-// The client must be one of the web or http2 channels:
-// final figClient = FigClient.fromWebChannel(webChannel);
 final figClient = FigClient(channel);
 
 /// Initialize our gRPC client. You MUST include the fig interceptor

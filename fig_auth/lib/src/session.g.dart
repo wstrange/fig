@@ -12,7 +12,7 @@ Session _$SessionFromJson(Map<String, dynamic> json) => Session(
       subject: json['subject'] as String,
       lastAccessTime: DateTime.parse(json['lastAccessTime'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
-    )..persisted = json['persisted'] as bool;
+    );
 
 Map<String, dynamic> _$SessionToJson(Session instance) => <String, dynamic>{
       'cookie': instance.cookie,
@@ -20,5 +20,4 @@ Map<String, dynamic> _$SessionToJson(Session instance) => <String, dynamic>{
       'lastAccessTime': instance.lastAccessTime.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'subject': instance.subject,
-      'persisted': instance.persisted,
     };

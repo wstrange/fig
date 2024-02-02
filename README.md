@@ -1,35 +1,39 @@
 # Fig - Firebase Identity for Flutter using gRPC
 
+
+![](bard-fig.png)
+
+
 Fig provides two packages:
 
-* fig_auth - for Dart _server_ code. Implements an authentication  and session management 
+* fig_auth - for Dart _server_ code. Implements an authentication and session management 
  framework for your Dart gRPC services.
 * fig_flutter - Provides client authentication to your Dart gRPC server code
 
-Both packages delegate _authentication_ to Firebase. These packages provide a framework
+Both packages delegate authentication to Firebase. Together these packages provide a framework
 for integrating authentication and session managment into your gRPC services. 
 
-Use this if:
+Use Fig if:
 
-* You want to write your server using Dart.
+* You want to write your server in Dart.
 * You want your Flutter client to interact with your Dart server using gRPC instead of http/json.
 * You need basic session management.
 
 This pattern is described in [this article](https://warrenstrange.medium.com/flutter-web-a-dart-grpc-server-and-firebase-authentication-9b6fb4593593
 )
 
-This code is lightly tested and POC quality. If there is further interest let's collaborate to 
+This code is lightly tested and I'd consider it POC quality. If there is further interest let's collaborate to 
 make it production ready.
 
 ## How it works: The Readers Digest version
 
 * The Flutter client authenticates to Firebase and obtains an OIDC jwt token.
 * The client calls the `Authenticate` gRPC method provided by `fig_auth`, passing along the OIDC token.
-* The `fig_auth` package validates the OIDC token using PKI.
+* `fig_auth` validates the OIDC token using PKI.
 * If the token is valid, fig_auth creates a `Session` for the user, and returns an opaque session cookie
 to the client in the response.
 * The client provides the session cookie in subsequent calls using a gRPC `Authorization` header. This
- is injected into gRPC calls by a client interceptor. 
+ is injected into gRPC calls by a client interceptor provided by the `fig_flutter` package.
 * The service interceptor provided by `fig_auth` looks for a valid session cookie. If the cookie is valid, and 
  the session has not timed out, the call will be allowed to proceed to your gRPC method. If the
  session is not valid, or a cookie is not provided, a gRPC error will be returned to the client.
@@ -38,10 +42,13 @@ to the client in the response.
   
 ## Running the example
 
+The easiest way to understand how Fig works is to run the provided example and to study the
+source code.
+
 An example [service](fig_auth/example/bin/run.dart) and [Flutter client](fig_flutter/example/lib/main.dart) are 
 provided.
 
-The easiest way to demo this is to use the provided [script](fig_auth/example/run.sh) to launch the gRPC service and the envoy gRPC proxy:
+To demo this is to use the provided [script](fig_auth/example/run.sh) to launch the gRPC service and the envoy gRPC proxy:
 
 ```bash
 cd fig_auth/example

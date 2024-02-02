@@ -1,7 +1,7 @@
 # Fig - Firebase Identity for Flutter using gRPC
 
 
-![](bard-fig.png)
+![README.md](bard-fig.png){ width="300" height="300" }
 
 
 Fig provides two packages:
